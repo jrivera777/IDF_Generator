@@ -2,9 +2,9 @@ package IDF;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilder;
@@ -28,8 +28,10 @@ public class IDFGenerator
      * @param optionsPath
      * @param basePath
      */
-    public static void GenerateFiles(File optionsPath, File baseIdfPath)
+    public static void GenerateFiles(File optionsPath, File baseIdfPath, File baseIdf)
     {
+        final String bName = baseIdf.getName();
+        final String bTemp = baseIdf.getName().substring(0, baseIdf.getName().indexOf(".idf"));
         FilenameFilter fnf =
                 new FilenameFilter()
                 {
@@ -37,8 +39,8 @@ public class IDFGenerator
                     @Override
                     public boolean accept(File dir, String name)
                     {
-                        return !name.equalsIgnoreCase("base.idf")
-                                && !name.equalsIgnoreCase("base-temp.idf")
+                        return !name.equalsIgnoreCase(bName)
+                                && !name.equalsIgnoreCase(bTemp + "-temp.idf")
                                 && name.toLowerCase().endsWith(".idf");
                     }
                 };
@@ -49,15 +51,15 @@ public class IDFGenerator
         int dashCount = 1;
         int paramMax = parametrics.size();
         /// Run PPP on base file first
-        String baseFileName = baseIdfPath + "\\base.idf";
-        String baseTempName = baseIdfPath + "\\base-temp.idf";
+        //String baseFileName = baseIdfPath + "\\base.idf";
+        String baseTempName = baseIdfPath.getPath() + "\\" + bTemp + "-temp.idf";
         try
         {
-            FileUtils.copyFile(new File(baseFileName), new File(baseTempName));
+            FileUtils.copyFile(baseIdf, new File(baseTempName));
         }
         catch (IOException e)
         {
-            System.err.println("Failed to copy base.idf file!!");
+            System.err.println("Failed to copy base IDF file!!");
             System.exit(-1);
         }
 
@@ -114,11 +116,10 @@ public class IDFGenerator
         /*
          * Remove 'intermediate' files, i.e. files that don't have all
          * parameters filled out with an option (not including the base file).
-         * The files needed should have -# additions equal to the number of
+         * The files needed should have - # additions equal to the number of
          * parameters there were. e.g. 3 parameters might look like
          * base-1-2-2.idf.
          */
-
         try
         {
             FilenameFilter filter = new FilenameFilter()
@@ -127,16 +128,17 @@ public class IDFGenerator
                 @Override
                 public boolean accept(File dir, String name)
                 {
-                    return !name.equalsIgnoreCase("base.idf")
+                    return !name.equalsIgnoreCase(bName)
                             && (name.toLowerCase().endsWith(".idf")
                             || name.toLowerCase().endsWith(".int"));
                 }
             };
-            CopyResults(baseIdfPath, fnf, paramMax);
+            CopyResults(baseIdfPath, fnf, bTemp, paramMax);
             cleanUpFiles(baseIdfPath, filter);
         }
         catch (Exception e)
         {
+            e.printStackTrace();
         }
 
     }
@@ -163,7 +165,7 @@ public class IDFGenerator
         {
             input = new FileInputStream(fileName);
             String content = IOUtils.toString(input);
-            Pattern p = Pattern.compile("\\$" + param + ",\\s*!-ignore");
+            Pattern p = Pattern.compile("\\$" + param + ",\\s*!-\\s*ignore");
             content = p.matcher(content).replaceAll(
                     Matcher.quoteReplacement("=$" + param + ", !- Current "
                     + param + " Value"));
@@ -251,7 +253,7 @@ public class IDFGenerator
 
     private static Map<String, List<POption>> readParametricOptions(String paraOptions)
     {
-        Map<String, List<POption>> params = new HashMap<String, List<POption>>();
+        Map<String, List<POption>> params = new TreeMap<String, List<POption>>();
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         try
         {
@@ -333,7 +335,7 @@ public class IDFGenerator
             files[i].deleteOnExit();
     }
 
-    public static void CopyResults(File fromDir, FilenameFilter filter, int paramCount) throws IOException
+    public static void CopyResults(File fromDir, FilenameFilter filter, String idfName, int paramCount) throws IOException
     {
         File[] files = fromDir.listFiles(filter);
         File toDir = new File(fromDir.getPath() + "\\OutputIDFs");
@@ -343,8 +345,15 @@ public class IDFGenerator
                     + "Stopped copying results over");
         for (int i = 0; i < files.length; i++)
         {
-            if (countDashes(files[i].getName()) - 1 == paramCount)
-                FileUtils.copyFileToDirectory(files[i], toDir);
+            Pattern p = Pattern.compile(idfName + "-temp-(.*)");
+            Matcher m = p.matcher(files[i].getName());
+            if (m.find())
+            {
+                String adjustedName = "\\" + m.group(1);
+                File fileCopy = new File(toDir.getPath() + adjustedName);
+                if (countDashes(files[i].getName()) - 1 == paramCount)
+                    FileUtils.copyFile(files[i], fileCopy);
+            }
         }
     }
 }
