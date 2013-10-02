@@ -44,6 +44,7 @@ public class Test_IDFGenerator
                     JOptionPane.showMessageDialog(null, "Missing input! Exiting...", "Missing Input", JOptionPane.ERROR_MESSAGE);
                     System.exit(0);
                 }
+                IDFGenerator.pstyle = pstyle;
                 IDFGenerator.GenerateFiles(options, base, baseDir, pppDir);
                 JOptionPane.showMessageDialog(null, "IDFGenerator finished Running!!!", "Finished", JOptionPane.INFORMATION_MESSAGE);
                 break;
@@ -61,7 +62,7 @@ public class Test_IDFGenerator
                 File options = new File(args[0]);
                 File base = new File(args[1]);
                 File baseDir = new File(args[2]);
-                File pppDir = new File(args[2]);
+                File pppDir = new File(args[3]);
 
                 IDFGenerator.GenerateFiles(options, base, baseDir, pppDir);
                 break;

@@ -1,5 +1,6 @@
 package IDF;
 
+import IDF.Test_IDFGenerator.ProgramStyle;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,29 +8,33 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.JOptionPane;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import org.apache.commons.io.IOUtils;
 
 public class IDFGenerator
 {
 
     /**
      * Generates all possible IDF files by running energyplus auxilary program
-     * parametricpreprocessor.exe on file within a directory.
+     * parametricpreprocessor.exe on files within a directory.
      *
      * @param optionsPath
      * @param basePath
      */
+    public static ProgramStyle pstyle;
+
     public static void GenerateFiles(File optionsPath, File baseIdf, File baseIdfPath, File pppDir)
     {
+        validatePaths(baseIdfPath, optionsPath, baseIdf, pppDir);
         final String bName = baseIdf.getName();
         final String bTemp = baseIdf.getName().substring(0, baseIdf.getName().indexOf(".idf"));
         FilenameFilter fnf =
@@ -44,7 +49,6 @@ public class IDFGenerator
                                 && name.toLowerCase().endsWith(".idf");
                     }
                 };
-        validatePaths(baseIdfPath, optionsPath);
 
         //load parametric options
         Map<String, List<POption>> parametrics = readParametricOptions(optionsPath.getPath());
@@ -59,7 +63,10 @@ public class IDFGenerator
         }
         catch (IOException e)
         {
-            System.err.println("Failed to copy base IDF file!!");
+            if (pstyle == ProgramStyle.CMD)
+                System.err.println("Failed to copy base IDF file!!");
+            else
+                JOptionPane.showMessageDialog(null, "Failed to copy base IDF file!!", "Copy Error", JOptionPane.ERROR_MESSAGE);
             System.exit(-1);
         }
 
@@ -73,7 +80,7 @@ public class IDFGenerator
         dashCount++;
         try
         {
-            runPPP(baseIdfPath.getPath(), baseTempName);
+            runPPP(pppDir.getPath(), baseTempName);
         }
         catch (InterruptedException ex)
         {
@@ -82,9 +89,19 @@ public class IDFGenerator
         }
         catch (IOException ex)
         {
-            System.err.println("Something went wrong running the parametric"
-                    + "preprocessor program!!! Check <idfFile>.err for details.");
+            if (pstyle == ProgramStyle.CMD)
+            {
+                System.err.printf("Something went wrong running the parametric"
+                        + "preprocessor program!!! Check %s error file, if one exists, for details.", baseTempName);
+            }
+            else
+            {
+                JOptionPane.showMessageDialog(null, "Something went wrong running the parametric"
+                        + "preprocessor program!!! Check %s error file, if one exists, for details.", "PPP Failure", JOptionPane.ERROR_MESSAGE);
+            }
+            (new File(baseTempName)).deleteOnExit();
             System.exit(-1);
+
         }
 
         //apply same process for every other parameter on all files
@@ -103,7 +120,7 @@ public class IDFGenerator
                     addParametricObjects(idf.getPath(), param, pOpts);
                     try
                     {
-                        runPPP(baseIdfPath.getPath(), idf.getPath());
+                        runPPP(pppDir.getPath(), idf.getPath());
                     }
                     catch (Exception e)
                     {
@@ -117,8 +134,7 @@ public class IDFGenerator
          * Remove 'intermediate' files, i.e. files that don't have all
          * parameters filled out with an option (not including the base file).
          * The files needed should have - # additions equal to the number of
-         * parameters there were. e.g. 3 parameters might look like
-         * base-1-2-2.idf.
+         * parameters there were. e.g. 3 parameters might look like 1-2-2.idf.
          */
         try
         {
@@ -143,16 +159,36 @@ public class IDFGenerator
 
     }
 
-    private static void validatePaths(File dir, File options)
+    private static void validatePaths(File dir, File options, File base, File ppp)
     {
+        boolean quit = false;
         if (!dir.isDirectory())
         {
-            System.err.printf("%s is not a directory!! Quiting...\n", dir.getName());
-            System.exit(-1);
+            System.err.printf("%s is not a directory!!\n", dir.getName());
+            quit = true;
         }
         if (!options.isFile() || !options.getName().toLowerCase().endsWith(".xml"))
         {
-            System.err.printf("%s is not an XML file!! Quiting...\n");
+            System.err.printf("%s is not an XML file!!\n", options.getName());
+            quit = true;
+        }
+        if (!base.isFile() || !base.getName().toLowerCase().endsWith(".idf"))
+        {
+            System.err.printf("%s is not an IDF file!!\n", base.getName());
+            quit = true;
+        }
+        if (!ppp.isDirectory())
+        {
+            System.err.printf("%s is not a directory!!\n", dir.getName());
+            quit = true;
+        }
+
+        if (quit)
+        {
+            if (pstyle == ProgramStyle.CMD)
+                System.err.println("Quiting...");
+            else
+                JOptionPane.showMessageDialog(null, "Check your input files!", "Input Error", JOptionPane.ERROR_MESSAGE);
             System.exit(-1);
         }
     }
@@ -184,7 +220,11 @@ public class IDFGenerator
         }
         catch (IOException e)
         {
-            System.err.println("Something went wrong replacing unused parameter!!!");
+            if (pstyle == ProgramStyle.CMD)
+                System.err.println("Something went wrong replacing unused parameter!!!");
+            else
+                JOptionPane.showMessageDialog(null, "Something went wrong replacing unused parameter!!!",
+                        "Parameter Error", JOptionPane.ERROR_MESSAGE);
             System.exit(-1);
         }
         finally
@@ -205,9 +245,9 @@ public class IDFGenerator
     /**
      * Attempts to add two sections to the given IDF file. The first is a
      * Parametric Object of type 'SetValueForRun'. These are the options that
-     * may be swapped with any reference to the given parameter. The second 
-     * section adds a suffix to the newly created IDF files based on the 
-     * selected option. This should be used in conjunction with 
+     * may be swapped with any reference to the given parameter. The second
+     * section adds a suffix to the newly created IDF files based on the
+     * selected option. This should be used in conjunction with
      * <i>replaceUnusedParameter</i> before calling the ParametricPreProcessor.
      *
      * @param fileName IDF file to update.
@@ -249,7 +289,10 @@ public class IDFGenerator
         {
             if (out != null)
                 out.close();
-            System.err.println("Somethin went wrong adding parametric objects!!!");
+            if (pstyle == ProgramStyle.CMD)
+                System.err.println("Something went wrong adding parametric objects!!!");
+            else
+                JOptionPane.showMessageDialog(null, "Something went wrong adding parametric objects!!!", "Parametric Object Error", JOptionPane.ERROR_MESSAGE);
             System.exit(-1);
         }
         finally
@@ -264,27 +307,29 @@ public class IDFGenerator
      * does <b>not</b> spawn new threads, as each subsequent call relies on the
      * previous call being complete.
      *
-     * @param basePath Directory containing the ParametricPreProcessor.
+     * @param path Directory containing the ParametricPreProcessor.
      * @param fileName IDF file argument for the ParametricPreProcessor.
      * @throws IOException
      * @throws InterruptedException
      */
-    private static void runPPP(String basePath, String fileName) throws IOException, InterruptedException
+    private static void runPPP(String path, String fileName) throws IOException, InterruptedException
     {
 
         String[] proc =
         {
-            basePath + "\\parametricpreprocessor.exe",
+            path + "\\parametricpreprocessor.exe",
             fileName
         };
         //run ParametricPreprocess.exe on idf file with 
         Process p = Runtime.getRuntime().exec(proc);
         p.waitFor();
     }
+
     /**
-     * Read in the Options XML file. Attempts to generate a mapping between 
-     * parameters and their options for use in generating Parametric Objects
-     * in an IDF file.
+     * Read in the Options XML file. Attempts to generate a mapping between
+     * parameters and their options for use in generating Parametric Objects in
+     * an IDF file.
+     *
      * @param paraOptions XML file containing options for each parameter.
      * @return Map containing Parameter names and their associated Options.
      */

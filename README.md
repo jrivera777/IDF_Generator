@@ -34,14 +34,14 @@ IDF_Generator attempts to generate the following files
 * file1 -> a1, b1
 * file2 -> a1, b2
 * file3 -> a1, b3
-* file1 -> a2, b1
-* file2 -> a2, b2
-* file3 -> a2, b3
-* file1 -> a3, b1
-* file2 -> a3, b2
-* file3 -> a3, b3
+* file4 -> a2, b1
+* file5 -> a2, b2
+* file6 -> a2, b3
+* file7 -> a3, b1
+* file8 -> a3, b2
+* file9 -> a3, b3
 
-If parametricpreprocessor is given an IDF file with 3 parametric objects,
+If the parametricpreprocessor is given an IDF file with 3 parametric objects,
 having ***N***, ***M***, and ***R*** options respectively, where ***N*** is the largest amount, it
 will attempt to produce at most ***N*** files.
 
