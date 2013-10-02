@@ -51,7 +51,7 @@ public class IDFGenerator
         int dashCount = 1;
         int paramMax = parametrics.size();
         /// Run PPP on base file first
-        //String baseFileName = baseIdfPath + "\\base.idf";
+
         String baseTempName = baseIdfPath.getPath() + "\\" + bTemp + "-temp.idf";
         try
         {
@@ -157,6 +157,15 @@ public class IDFGenerator
         }
     }
 
+    /**
+     * Attempts to replace all instances of given parameter in the form
+     * <i>$param !-ignore</i> within an IDF file with it's "recognizable" form
+     * <i>=$param</i>.
+     *
+     * @param fileName IDF file to search and replace in.
+     * @param param Parameter to search for and replace. A '$' is prepended to
+     * the given parameter before the search.
+     */
     private static void replaceUnusedParameter(String fileName, String param)
     {
         FileInputStream input = null;
@@ -193,6 +202,18 @@ public class IDFGenerator
         }
     }
 
+    /**
+     * Attempts to add two sections to the given IDF file. The first is a
+     * Parametric Object of type 'SetValueForRun'. These are the options that
+     * may be swapped with any reference to the given parameter. The second 
+     * section adds a suffix to the newly created IDF files based on the 
+     * selected option. This should be used in conjunction with 
+     * <i>replaceUnusedParameter</i> before calling the ParametricPreProcessor.
+     *
+     * @param fileName IDF file to update.
+     * @param param Parametric object to add to the IDF file.
+     * @param pOpts The options to associate with the given parameter.
+     */
     private static void addParametricObjects(String fileName, String param, List<POption> pOpts)
     {
         PrintWriter out = null;
@@ -238,6 +259,16 @@ public class IDFGenerator
         }
     }
 
+    /**
+     * Attempts to run a single instance of the ParametricPreProcessor. This
+     * does <b>not</b> spawn new threads, as each subsequent call relies on the
+     * previous call being complete.
+     *
+     * @param basePath Directory containing the ParametricPreProcessor.
+     * @param fileName IDF file argument for the ParametricPreProcessor.
+     * @throws IOException
+     * @throws InterruptedException
+     */
     private static void runPPP(String basePath, String fileName) throws IOException, InterruptedException
     {
 
@@ -250,7 +281,13 @@ public class IDFGenerator
         Process p = Runtime.getRuntime().exec(proc);
         p.waitFor();
     }
-
+    /**
+     * Read in the Options XML file. Attempts to generate a mapping between 
+     * parameters and their options for use in generating Parametric Objects
+     * in an IDF file.
+     * @param paraOptions XML file containing options for each parameter.
+     * @return Map containing Parameter names and their associated Options.
+     */
     private static Map<String, List<POption>> readParametricOptions(String paraOptions)
     {
         Map<String, List<POption>> params = new TreeMap<String, List<POption>>();

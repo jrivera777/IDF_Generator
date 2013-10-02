@@ -17,15 +17,6 @@ public class Test_IDFGenerator
 
     public static void main(String[] args)
     {
-//        String name = "base-temp-1-1-2-3.idf";
-//        Pattern p = Pattern.compile("base-temp-(.*)");
-//        Matcher m = p.matcher(name);
-//        System.out.println(m.groupCount());
-//        while (m.find())
-//        {
-//            System.out.println(m.group(1));
-//        }
-
         switch (pstyle)
         {
             case GUI:
