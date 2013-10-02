@@ -80,11 +80,10 @@ These files can then be used to run simulations using [EPLaunch](http://apps1.ee
 	* You can click the IDFGenerator JAR file. It will ask for 
 		1. The base IDF file.
 		2. The Options XML file. 
-		3. The directory that contains the base IDF file AND the parametricpreprocessor.exe file.  
+		3. The directory that will contain the resulting IDF files.
+                4. The directory that contains the ParametricPreProcessor.
 	* You can copy the parametricpreprocessor.exe file from your EnergyPlus install folder, 
 	* which is usually something like: `"C:\EnergyPlusVX-X-X\PreProcess\ParametricPreProcessor\"`
-  	**Note**: You must keep the jar within the same folder as the given lib folder. 
-  	*THIS IS SUBJECT TO CHANGE IN THE FUTURE (A SINGLE JAR WILL SOON BE AVAILABLE)*
 	* The final generated IDF files should show up in a folder called "OutputIDFs" within the base folder given at the start of the program.
 	  
 If you have any questions, concerns, or have found a mistake in this document or the program, please contact me at `jrive034-at-fiu.edu.`

@@ -28,7 +28,7 @@ public class IDFGenerator
      * @param optionsPath
      * @param basePath
      */
-    public static void GenerateFiles(File optionsPath, File baseIdfPath, File baseIdf)
+    public static void GenerateFiles(File optionsPath, File baseIdf, File baseIdfPath, File pppDir)
     {
         final String bName = baseIdf.getName();
         final String bTemp = baseIdf.getName().substring(0, baseIdf.getName().indexOf(".idf"));

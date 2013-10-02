@@ -30,6 +30,10 @@ public class Test_IDFGenerator
                 chooser.showOpenDialog(null);
                 File options = chooser.getSelectedFile();
                 chooser.setSelectedFile(null);
+                chooser.setDialogTitle("Select ParametricPreProcessor Directory");
+                chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                chooser.showOpenDialog(null);
+                File pppDir = chooser.getSelectedFile();
                 chooser.setDialogTitle("Select Base Directory");
                 chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 chooser.showOpenDialog(null);
@@ -40,7 +44,7 @@ public class Test_IDFGenerator
                     JOptionPane.showMessageDialog(null, "Missing input! Exiting...", "Missing Input", JOptionPane.ERROR_MESSAGE);
                     System.exit(0);
                 }
-                IDFGenerator.GenerateFiles(options, baseDir, base);
+                IDFGenerator.GenerateFiles(options, base, baseDir, pppDir);
                 JOptionPane.showMessageDialog(null, "IDFGenerator finished Running!!!", "Finished", JOptionPane.INFORMATION_MESSAGE);
                 break;
             }
@@ -48,14 +52,18 @@ public class Test_IDFGenerator
             {
                 if (args.length < 2)
                 {
-                    System.err.println("Usage: IDFGenerator.jar <OptionsFile> <BaseDirectory>");
+                    System.err.println("Usage: IDFGenerator.jar <OptionsFile> "
+                            + "<BaseIDF> <BaseDirectory> "
+                            + "<ParametricPreProcessorDirectory>");
                     System.exit(-1);
                 }
 
                 File options = new File(args[0]);
-                File baseDir = new File(args[1]);
-                File base = new File(args[2]);
-                IDFGenerator.GenerateFiles(options, baseDir, base);
+                File base = new File(args[1]);
+                File baseDir = new File(args[2]);
+                File pppDir = new File(args[2]);
+
+                IDFGenerator.GenerateFiles(options, base, baseDir, pppDir);
                 break;
             }
         }
