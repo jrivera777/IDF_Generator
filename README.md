@@ -1,5 +1,5 @@
 IDF_Generator
-=============
+===================
 
 Program Name: IDFGenerator.jar
 ------------------------------  
@@ -20,8 +20,11 @@ Given an idf file with parametric objects:
 
 The parametricpreprocessor will generate only 3 files. These would have values:  
 file1 -> a1, b1
+
 file2 -> a2, b2
+
 file3 -> a3, b3
+
 
 This is does not describe all possible combinations. If one parametric object
 contains fewer options than another, its last option will be reused.
