@@ -81,8 +81,8 @@ These files can then be used to run simulations using [EPLaunch](http://apps1.ee
 		1. The base IDF file.
 		2. The Options XML file. 
 		3. The directory that will contain the resulting IDF files.
-                4. The directory that contains the ParametricPreProcessor.
-	* You can copy the parametricpreprocessor.exe file from your EnergyPlus install folder, 
+		4. The directory that contains the ParametricPreProcessor.
+	* You can find the parametricpreprocessor.exe file in your EnergyPlus install folder, 
 	* which is usually something like: `"C:\EnergyPlusVX-X-X\PreProcess\ParametricPreProcessor\"`
 	* The final generated IDF files should show up in a folder called "OutputIDFs" within the base folder given at the start of the program.
 	  
