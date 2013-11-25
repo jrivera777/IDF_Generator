@@ -34,7 +34,7 @@ public class Test_IDFGenerator
                 chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 chooser.showOpenDialog(null);
                 File pppDir = chooser.getSelectedFile();
-                chooser.setDialogTitle("Select Base Directory");
+                chooser.setDialogTitle("Select Output Directory");
                 chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 chooser.showOpenDialog(null);
                 File baseDir = chooser.getSelectedFile();

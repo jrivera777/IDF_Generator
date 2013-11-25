@@ -97,7 +97,7 @@ public class IDFGenerator
             else
             {
                 JOptionPane.showMessageDialog(null, "Something went wrong running the parametric"
-                        + "preprocessor program!!! Check %s error file, if one exists, for details.", "PPP Failure", JOptionPane.ERROR_MESSAGE);
+                        + "preprocessor program!!! Check error " + baseTempName + " file, if one exists, for details.", "PPP Failure", JOptionPane.ERROR_MESSAGE);
             }
             (new File(baseTempName)).deleteOnExit();
             System.exit(-1);
