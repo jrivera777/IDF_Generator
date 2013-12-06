@@ -1,11 +1,13 @@
 package IDF;
 
-import IDF.Test_IDFGenerator.ProgramStyle;
+import IDF.Run_IDFGenerator.ProgramStyle;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
@@ -149,7 +151,7 @@ public class IDFGenerator
                             || name.toLowerCase().endsWith(".int"));
                 }
             };
-            CopyResults(baseIdfPath, fnf, bTemp, paramMax);
+            copyResults(baseIdfPath, fnf, bTemp, paramMax);
             cleanUpFiles(baseIdfPath, filter);
         }
         catch (Exception e)
@@ -417,7 +419,7 @@ public class IDFGenerator
             files[i].deleteOnExit();
     }
 
-    public static void CopyResults(File fromDir, FilenameFilter filter, String idfName, int paramCount) throws IOException
+    public static void copyResults(File fromDir, FilenameFilter filter, String idfName, int paramCount) throws IOException
     {
         File[] files = fromDir.listFiles(filter);
         File toDir = new File(fromDir.getPath() + "\\OutputIDFs");
@@ -438,4 +440,56 @@ public class IDFGenerator
             }
         }
     }
+
+    public static void buildAndRunIDFs(File optionsPath, File baseIdf, File baseOutputPath, File pppDir)
+    {
+        validatePaths(baseOutputPath, optionsPath, baseIdf, pppDir);
+        Map<String, List<POption>> parametrics = readParametricOptions(optionsPath.getPath());
+
+        List<List<String>> params = new ArrayList<List<String>>();
+        for (List<POption> optList : parametrics.values())
+        {
+            ArrayList<String> opts = new ArrayList<String>();
+            for (POption opt : optList)
+                opts.add(opt.getValue());
+            params.add(opts);
+        }
+        //create all possible permutations
+        ArrayList<String> res = new ArrayList<String>();
+        generatePermutations(params, res, 0, "");
+
+
+        ExecutorService exService = Executors.newFixedThreadPool(2);
+        for(String perm : res)
+        {
+            exService.execute(new IDFLoad_Run(baseIdf, baseOutputPath, res.get(0), parametrics, pstyle));
+        }
+        exService.shutdown();
+    }
+
+    /**
+     * Generate all permutations from given list of lists.
+     *
+     * @param Lists List of lists to be permuted
+     * @param result List containing all permutations
+     * @param currList current List of strings being looked at
+     * @param current Current permutation being built
+     */
+    public static void generatePermutations(List<List<String>> Lists, List<String> result, int currList, String currPerm)
+    {
+        if (currList == Lists.size())
+        {
+            result.add(currPerm);
+            return;
+        }
+
+        for (int i = 0; i < Lists.get(currList).size(); ++i)
+        {
+            generatePermutations(Lists, result, currList + 1,
+                    currPerm.equals("") ? Lists.get(currList).get(i) : currPerm + "-" + Lists.get(currList).get(i));
+        }
+    }
+    
+    
 }
+

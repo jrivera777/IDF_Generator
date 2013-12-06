@@ -4,7 +4,7 @@ import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
-public class Test_IDFGenerator
+public class Run_IDFGenerator
 {
 
     enum ProgramStyle
