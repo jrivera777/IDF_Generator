@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.naming.directory.DirContext;
 import javax.swing.JOptionPane;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -38,7 +39,7 @@ public class IDFLoad_Run implements Runnable
     public void run()
     {
         String permIdf = baseOutputPath.getPath() + "\\" + permutation + ".idf";
-        System.out.println("Running permutation: " + permutation);
+        System.out.println("Running permutation: " + permutation + "...");
         try
         {
             FileUtils.copyFile(baseIdf, new File(permIdf));
@@ -117,12 +118,12 @@ public class IDFLoad_Run implements Runnable
             while ((line = buffer.readLine()) != null)
             {
                 diff = System.currentTimeMillis() - time;
-                if(diff % 60000 == 0)                
+                if (diff > 60000)
                 {
                     time = System.currentTimeMillis();
                     System.out.println(diff);
                     System.out.println("Simulation " + permutation + " still working...");
-                }   
+                }
             }
             System.out.println("Simulation " + permutation + " finished!");
             if (p.exitValue() == 0) //normal exit
@@ -133,8 +134,10 @@ public class IDFLoad_Run implements Runnable
             e.printStackTrace();
 
         }
-        
-//        OutputWriter.getInstance().writeLine(baseOutputPath.getPath() + "\\output.txt", permutation);
+        EnergyCalculator calculator = new SumMonthCalculatorKWH();
+        double totalElectricity = calculator.CalculateFacilityElectricity(new File(baseOutputPath.getPath() + "\\" + permutation + "Meter.csv"));
+
+        OutputWriter.getInstance().writeLine(baseOutputPath.getPath() + "\\output.txt", permutation + " - " + totalElectricity);
     }
 
     private void replaceUnusedParameter(String fileName, String param, String rplc)

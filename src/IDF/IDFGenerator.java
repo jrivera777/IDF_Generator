@@ -460,7 +460,7 @@ public class IDFGenerator
 
 
         ExecutorService exService = Executors.newFixedThreadPool(5);
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < 1; i++)
         {
             exService.execute(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, res.get(i), parametrics, pstyle));
         }
@@ -481,7 +481,7 @@ public class IDFGenerator
      * @param current Current permutation being built
      */
     public static void generatePermutations(List<List<String>> Lists, List<String> result, int currList, String currPerm)
-    {
+    {   
         if (currList == Lists.size())
         {
             result.add(currPerm);
