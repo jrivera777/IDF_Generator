@@ -441,7 +441,7 @@ public class IDFGenerator
         }
     }
 
-    public static void buildAndRunIDFs(File optionsPath, File baseIdf, File baseOutputPath, File pppDir)
+    public static void buildAndRunIDFs(File optionsPath, File baseIdf, File baseOutputPath, File pppDir, File batchLoc, File weather)
     {
         validatePaths(baseOutputPath, optionsPath, baseIdf, pppDir);
         Map<String, List<POption>> parametrics = readParametricOptions(optionsPath.getPath());
@@ -459,11 +459,16 @@ public class IDFGenerator
         generatePermutations(params, res, 0, "");
 
 
-        ExecutorService exService = Executors.newFixedThreadPool(2);
-        for(String perm : res)
+        ExecutorService exService = Executors.newFixedThreadPool(5);
+        for (int i = 0; i < 2; i++)
         {
-            exService.execute(new IDFLoad_Run(baseIdf, baseOutputPath, res.get(0), parametrics, pstyle));
+            exService.execute(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, res.get(i), parametrics, pstyle));
         }
+
+//        for (String perm : res)
+//        {
+//            exService.execute(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, perm, parametrics, pstyle));
+//        }
         exService.shutdown();
     }
 
@@ -489,7 +494,4 @@ public class IDFGenerator
                     currPerm.equals("") ? Lists.get(currList).get(i) : currPerm + "-" + Lists.get(currList).get(i));
         }
     }
-    
-    
 }
-
