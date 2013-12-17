@@ -14,6 +14,12 @@ import org.apache.commons.io.IOUtils;
 public class IDFLoad_Run implements Runnable
 {
 
+    private final String[] extensions =
+    {
+        ".audit", ".bnd", ".mdd", ".eio", ".err", ".eso",
+        "Table.html", "Meter.csv", ".csv", ".mtd", ".mtr",
+        ".rdd", ".rvaudit", ".shd", ".svg", ".idf"
+    };
     private File baseIdf;
     private File baseOutputPath;
     private File batchLocation;
@@ -118,10 +124,9 @@ public class IDFLoad_Run implements Runnable
             while ((line = buffer.readLine()) != null)
             {
                 diff = System.currentTimeMillis() - time;
-                if (diff > 60000)
+                if (diff > 30000)
                 {
                     time = System.currentTimeMillis();
-                    System.out.println(diff);
                     System.out.println("Simulation " + permutation + " still working...");
                 }
             }
@@ -137,7 +142,13 @@ public class IDFLoad_Run implements Runnable
         EnergyCalculator calculator = new SumMonthCalculatorKWH();
         double totalElectricity = calculator.CalculateFacilityElectricity(new File(baseOutputPath.getPath() + "\\" + permutation + "Meter.csv"));
 
-        OutputWriter.getInstance().writeLine(baseOutputPath.getPath() + "\\output.txt", permutation + " - " + totalElectricity);
+        OutputWriter.getInstance().writeLine(baseOutputPath.getPath() + "\\output.txt", permutation + " : " + totalElectricity);
+        System.out.printf("%s wrote to to output.txt\n", permutation);
+        for (String ext : extensions)
+        {
+            File f = new File(baseOutputPath.getPath() + "\\" + permutation + ext);
+            f.delete();
+        }
     }
 
     private void replaceUnusedParameter(String fileName, String param, String rplc)
@@ -148,7 +159,7 @@ public class IDFLoad_Run implements Runnable
         {
             input = new FileInputStream(fileName);
             String content = IOUtils.toString(input);
-            Pattern p = Pattern.compile("\\$" + param + ",\\s*!-\\s*ignore");
+            Pattern p = Pattern.compile("\\$" + param + ",\\s*(!-\\s*ignore)*");
             content = p.matcher(content).replaceAll(
                     Matcher.quoteReplacement(rplc + ", !- Current Value"));
 

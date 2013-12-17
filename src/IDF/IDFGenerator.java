@@ -460,11 +460,12 @@ public class IDFGenerator
 
 
         ExecutorService exService = Executors.newFixedThreadPool(5);
-        for (int i = 0; i < 1; i++)
+        for (int i = 0; i < 15; i++)
         {
             exService.execute(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, res.get(i), parametrics, pstyle));
         }
-
+        
+//        System.out.printf("Trying to run %d Simulations!", res.size());
 //        for (String perm : res)
 //        {
 //            exService.execute(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, perm, parametrics, pstyle));

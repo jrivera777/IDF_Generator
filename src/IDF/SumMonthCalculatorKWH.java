@@ -11,9 +11,10 @@ public class SumMonthCalculatorKWH implements EnergyCalculator
     public double CalculateFacilityElectricity(File energyusage)
     {
         double electricity = 0.0;
+        Scanner scan = null;
         try
         {
-            Scanner scan = new Scanner(energyusage);
+            scan = new Scanner(energyusage);
             scan.nextLine(); //discard header line
             while (scan.hasNextLine())
             {
@@ -25,6 +26,11 @@ public class SumMonthCalculatorKWH implements EnergyCalculator
         {
             e.printStackTrace();
             return -1;
+        }
+        finally
+        {
+            if(scan != null)
+                scan.close();
         }
 
         return electricity;
