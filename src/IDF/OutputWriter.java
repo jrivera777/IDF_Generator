@@ -3,7 +3,11 @@ package IDF;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
+/***
+ * Singleton class to write to a file in a thread-safe way.
+ * 
+ * @author Joseph Rivera
+ */
 public class OutputWriter
 {
 

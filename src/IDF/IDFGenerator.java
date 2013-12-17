@@ -22,18 +22,35 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+/**
+ * *
+ * Generates all possible IDF files by running energyplus auxilary program
+ * parametricpreprocessor.exe on files within a directory.
+ *
+ * @author Joseph Rivera
+ */
 public class IDFGenerator
 {
-
-    /**
-     * Generates all possible IDF files by running energyplus auxilary program
-     * parametricpreprocessor.exe on files within a directory.
-     *
-     * @param optionsPath
-     * @param basePath
-     */
     public static ProgramStyle pstyle;
 
+    /**
+     * *
+     * Creates set of all possible IDF files for use in simulations using the
+     * given base IDF file and defined Options files. Uses
+     * ParametricPreProcessor found in EnergyPlus installations.
+     * 
+     * Pro: Relatively fast for number of files created.
+     * Con: Possibly requires large amount of disk storage
+     *
+     * @param optionsPath XML file with defined options for all parametric
+     * objects.
+     * @param baseIdf Base IDF file to model created ones after.
+     * @param baseIdfPath Working directory.
+     * @param pppDir Directory containing ParametricPreProcessor
+     * @deprecated Probably don't want to use this as it can generate a HUGE
+     * number of IDF files.  An options file with 5 variables, each with 5 
+     * alternatives generates 5^5 = 3125 IDF files! 
+     */
     public static void GenerateFiles(File optionsPath, File baseIdf, File baseIdfPath, File pppDir)
     {
         validatePaths(baseIdfPath, optionsPath, baseIdf, pppDir);
@@ -164,22 +181,22 @@ public class IDFGenerator
     private static void validatePaths(File dir, File options, File base, File ppp)
     {
         boolean quit = false;
-        if (!dir.isDirectory())
+        if (dir != null && !dir.isDirectory())
         {
             System.err.printf("%s is not a directory!!\n", dir.getName());
             quit = true;
         }
-        if (!options.isFile() || !options.getName().toLowerCase().endsWith(".xml"))
+        if (options != null && !options.isFile() || !options.getName().toLowerCase().endsWith(".xml"))
         {
             System.err.printf("%s is not an XML file!!\n", options.getName());
             quit = true;
         }
-        if (!base.isFile() || !base.getName().toLowerCase().endsWith(".idf"))
+        if (base != null && !base.isFile() || !base.getName().toLowerCase().endsWith(".idf"))
         {
             System.err.printf("%s is not an IDF file!!\n", base.getName());
             quit = true;
         }
-        if (!ppp.isDirectory())
+        if (ppp != null && !ppp.isDirectory())
         {
             System.err.printf("%s is not a directory!!\n", dir.getName());
             quit = true;
@@ -400,6 +417,13 @@ public class IDFGenerator
         return params;
     }
 
+    /**
+     * *
+     * Counts the number of dashes in a file name of the form #-#-#-#...
+     *
+     * @param fName String to count dashes in
+     * @return Number of dashes found in String.
+     */
     private static int countDashes(String fName)
     {
         char[] letters = fName.toCharArray();
@@ -419,6 +443,16 @@ public class IDFGenerator
             files[i].deleteOnExit();
     }
 
+    /**
+     * *
+     * Copies final result files into given directory
+     *
+     * @param fromDir Directory to copy into
+     * @param filter Filters files seen in directory
+     * @param idfName
+     * @param paramCount
+     * @throws IOException
+     */
     public static void copyResults(File fromDir, FilenameFilter filter, String idfName, int paramCount) throws IOException
     {
         File[] files = fromDir.listFiles(filter);
@@ -441,9 +475,24 @@ public class IDFGenerator
         }
     }
 
-    public static void buildAndRunIDFs(File optionsPath, File baseIdf, File baseOutputPath, File pppDir, File batchLoc, File weather)
+    /**
+     * Multi-threaded implementation of IDF creator. This function creates all 
+     * possible IDFs, but instead runs their simulation right away and then 
+     * writes it's important output to a file. We end up with only a single file,
+     * instead of many IDF files that still need to be simulated.
+     * 
+     * Pro: Saves storage space. Only one output file.
+     * Con: Slow!!! Attempts to run an energy simulation for each IDF created.
+     * 
+     * @param optionsPath XML Options file.
+     * @param baseIdf Base IDF file.
+     * @param baseOutputPath Output Directory for results.
+     * @param batchLoc Location of Epl-run.bat file.
+     * @param weather Weather file for simulation (.epw). 
+     */
+    public static void buildAndRunIDFs(File optionsPath, File baseIdf, File baseOutputPath, File batchLoc, File weather)
     {
-        validatePaths(baseOutputPath, optionsPath, baseIdf, pppDir);
+        validatePaths(baseOutputPath, optionsPath, baseIdf, null);
         Map<String, List<POption>> parametrics = readParametricOptions(optionsPath.getPath());
 
         List<List<String>> params = new ArrayList<List<String>>();
@@ -454,17 +503,17 @@ public class IDFGenerator
                 opts.add(opt.getValue());
             params.add(opts);
         }
-        //create all possible permutations
+        //create all possible permutations for IDF files
         ArrayList<String> res = new ArrayList<String>();
         generatePermutations(params, res, 0, "");
 
-
+        // TESTING PURPOSES
         ExecutorService exService = Executors.newFixedThreadPool(5);
-        for (int i = 0; i < 15; i++)
+        for (int i = 0; i < 1; i++)
         {
             exService.execute(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, res.get(i), parametrics, pstyle));
         }
-        
+
 //        System.out.printf("Trying to run %d Simulations!", res.size());
 //        for (String perm : res)
 //        {
@@ -482,7 +531,7 @@ public class IDFGenerator
      * @param current Current permutation being built
      */
     public static void generatePermutations(List<List<String>> Lists, List<String> result, int currList, String currPerm)
-    {   
+    {
         if (currList == Lists.size())
         {
             result.add(currPerm);

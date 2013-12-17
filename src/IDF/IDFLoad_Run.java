@@ -6,14 +6,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.naming.directory.DirContext;
 import javax.swing.JOptionPane;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+/***
+ * Thread to run EnergyPlus simulations using Epl-run.bat provided in 
+ * EnergyPlus install.
+ * 
+ * Work Flow:
+ * 1. Copy Base IDF file.
+ * 2. Change parametric variables to selected options for this permutation.
+ * 3. Run Epl-run.bat with created IDF and given Weather file.
+ * 4. Write results into global output file (output.txt)
+ * 5. Clean up all temporary files.
+ * 
+ * @author Joseph Rivera
+ */
 public class IDFLoad_Run implements Runnable
 {
-
+    // Extensions for file created by simulation and thread
+    // Mostly used to delete them after successful finish
     private final String[] extensions =
     {
         ".audit", ".bnd", ".mdd", ".eio", ".err", ".eso",
@@ -59,6 +72,8 @@ public class IDFLoad_Run implements Runnable
             System.exit(-1);
         }
 
+        // Replace every parametric variable in the IDF with the chosen option
+        // for this permutation
         String[] opts = permutation.split("-");
         int i = 0;
         for (Map.Entry<String, List<POption>> entry : parametrics.entrySet())
@@ -78,20 +93,20 @@ public class IDFLoad_Run implements Runnable
         }
         try
         {
+            // Run Epl-run.bat program (which calls Energyplus.exe) to
+            // start a simulation with this IDF file
             final String batch = batchLocation.getPath() + "\\Epl-run.bat";
             final String in = permIdf.substring(0, permIdf.lastIndexOf("."));
             final String out = baseOutputPath.getPath() + "\\" + permutation;
 
-            //REFER TO Epl-run.bat comments for details
-            //=========================================
-            //Epl-run.bat "IDF file no extension" "Output file name no extension" 
-            //"exention(idf)" "Weather File with extension" "EP or NONE" "Pausing?(N)" 
-            //"Col limit?(nolimit)" "Convert ESO?(Y) "Process CSV?(Y)"  "active count? ("")" "Multi-threaded?(Y)" 
+            // REFER TO Epl-run.bat comments for details about input parameters
+            // =========================================
+            // Epl-run.bat "IDF file no extension" "Output file name no extension" 
+            // "exention(idf)" "Weather File with extension" "EP or NONE" "Pausing?(N)" 
+            // "Col limit?(nolimit)" "Convert ESO?(Y) "Process CSV?(Y)"  "active count? ("")" "Multi-threaded?(Y)" 
 
             ArrayList<String> commands = new ArrayList<String>()
             {
-
-                
                 {
                     add("cmd");
                     add("/c");
@@ -110,14 +125,23 @@ public class IDFLoad_Run implements Runnable
                 }
             };
             ProcessBuilder pb = new ProcessBuilder(commands);
+            
+            // Create new directory for this Simulation so as not to conflict
+            // with any other simulations already running
             File dir = new File(permutation);
             if (dir.mkdir())
             {
                 pb.directory(dir);
             }
+            
             double time = System.currentTimeMillis();
             double diff = 0;
             Process p = pb.start();
+            
+            // Handle output from simulation
+            // Currently just thrown away. Must be done though, otherwise
+            // we have a deadlock between this thread and the process running
+            // the simulation
             InputStreamReader isr = new InputStreamReader(p.getInputStream());
             BufferedReader buffer = new BufferedReader(isr);
             String line = "";
@@ -131,14 +155,18 @@ public class IDFLoad_Run implements Runnable
                 }
             }
             System.out.println("Simulation " + permutation + " finished!");
+            
             if (p.exitValue() == 0) //normal exit
                 FileUtils.deleteDirectory(dir);
         }
         catch (IOException e)
         {
             e.printStackTrace();
-
         }
+        
+        // Read file to calculate electricity usage for time duration (and any 
+        // other data values that might be pulled in the future.
+        // Implement EnergyCalculator Interface to handle new file formats
         EnergyCalculator calculator = new SumMonthCalculatorKWH();
         double totalElectricity = calculator.CalculateFacilityElectricity(new File(baseOutputPath.getPath() + "\\" + permutation + "Meter.csv"));
 
@@ -151,6 +179,14 @@ public class IDFLoad_Run implements Runnable
         }
     }
 
+    /**
+     * *
+     * Searches given file for one value and replaces it with the other.
+     *
+     * @param fileName File to search in.
+     * @param param Value to to replace in file.
+     * @param rplc Replacement value.
+     */
     private void replaceUnusedParameter(String fileName, String param, String rplc)
     {
         FileInputStream input = null;

@@ -13,6 +13,6 @@ public class Run_IDFGenerator_Threaded
         File pppDir = new File("C:\\Documents and Settings\\fdot\\Desktop\\Parametric");
         File batchLoc = new File("C:\\EnergyPlusV7-2-0");
         File weather = new File("C:\\EnergyPlusV7-2-0\\USA_TX_Fort.Worth-Alliance.AP.722594_TMY3.epw");
-        IDFGenerator.buildAndRunIDFs(options, base, baseDir, pppDir, batchLoc, weather);
+        IDFGenerator.buildAndRunIDFs(options, base, baseDir, batchLoc, weather);
     }
 }
