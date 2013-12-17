@@ -7,26 +7,27 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
+import javax.swing.JTextArea;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-/***
- * Thread to run EnergyPlus simulations using Epl-run.bat provided in 
- * EnergyPlus install.
- * 
- * Work Flow:
- * 1. Copy Base IDF file.
- * 2. Change parametric variables to selected options for this permutation.
- * 3. Run Epl-run.bat with created IDF and given Weather file.
- * 4. Write results into global output file (output.txt)
- * 5. Clean up all temporary files.
- * 
+/**
+ * *
+ * Thread to run EnergyPlus simulations using Epl-run.bat provided in EnergyPlus
+ * install.
+ *
+ * Work Flow: 1. Copy Base IDF file. 2. Change parametric variables to selected
+ * options for this permutation. 3. Run Epl-run.bat with created IDF and given
+ * Weather file. 4. Write results into global output file (output.txt) 5. Clean
+ * up all temporary files.
+ *
  * @author Joseph Rivera
  */
 public class IDFLoad_Run implements Runnable
 {
     // Extensions for file created by simulation and thread
     // Mostly used to delete them after successful finish
+
     private final String[] extensions =
     {
         ".audit", ".bnd", ".mdd", ".eio", ".err", ".eso",
@@ -40,6 +41,7 @@ public class IDFLoad_Run implements Runnable
     private File weather_epw;
     private Map<String, List<POption>> parametrics;
     private Run_IDFGenerator.ProgramStyle pstyle;
+    private JTextArea area;
 
     public IDFLoad_Run(File bidf, File bopp, File bLoc, File wthr,
             String perm, Map<String, List<POption>> params,
@@ -54,11 +56,23 @@ public class IDFLoad_Run implements Runnable
         weather_epw = wthr;
     }
 
+    public IDFLoad_Run(File bidf, File bopp, File bLoc, File wthr,
+            String perm, Map<String, List<POption>> params,
+            Run_IDFGenerator.ProgramStyle style, JTextArea ar)
+    {
+        this(bidf, bopp, bLoc, wthr, perm, params, style);
+        area = ar;
+    }
+
     @Override
     public void run()
     {
         String permIdf = baseOutputPath.getPath() + "\\" + permutation + ".idf";
+
         System.out.println("Running permutation: " + permutation + "...");
+        if (area != null)
+            area.append("Running permutation: " + permutation + "...\n");
+
         try
         {
             FileUtils.copyFile(baseIdf, new File(permIdf));
@@ -104,10 +118,12 @@ public class IDFLoad_Run implements Runnable
             // Epl-run.bat "IDF file no extension" "Output file name no extension" 
             // "exention(idf)" "Weather File with extension" "EP or NONE" "Pausing?(N)" 
             // "Col limit?(nolimit)" "Convert ESO?(Y) "Process CSV?(Y)"  "active count? ("")" "Multi-threaded?(Y)" 
-            
+
             //NOTE: Path to Epl-run.bat file should probably NOT have spaces in it.
             ArrayList<String> commands = new ArrayList<String>()
             {
+
+                
                 {
                     add("cmd");
                     add("/c");
@@ -126,7 +142,7 @@ public class IDFLoad_Run implements Runnable
                 }
             };
             ProcessBuilder pb = new ProcessBuilder(commands);
-            
+
             // Create new directory for this Simulation so as not to conflict
             // with any other simulations already running
             File dir = new File(permutation);
@@ -134,11 +150,11 @@ public class IDFLoad_Run implements Runnable
             {
                 pb.directory(dir);
             }
-            
+
             double time = System.currentTimeMillis();
             double diff = 0;
             Process p = pb.start();
-            
+
             // Handle output from simulation
             // Currently just thrown away. Must be done though, otherwise
             // we have a deadlock between this thread and the process running
@@ -153,10 +169,13 @@ public class IDFLoad_Run implements Runnable
                 {
                     time = System.currentTimeMillis();
                     System.out.println("Simulation " + permutation + " still working...");
+                    if (area != null)
+                        area.append("Simulation " + permutation + " still working...\n");
                 }
             }
             System.out.println("Simulation " + permutation + " finished!");
-            
+            if (area != null)
+                area.append("Simulation " + permutation + " finished!\n");
             if (p.exitValue() == 0) //normal exit
                 FileUtils.deleteDirectory(dir);
         }
@@ -164,7 +183,7 @@ public class IDFLoad_Run implements Runnable
         {
             e.printStackTrace();
         }
-        
+
         // Read file to calculate electricity usage for time duration (and any 
         // other data values that might be pulled in the future.
         // Implement EnergyCalculator Interface to handle new file formats
@@ -173,6 +192,8 @@ public class IDFLoad_Run implements Runnable
 
         OutputWriter.getInstance().writeLine(baseOutputPath.getPath() + "\\output.txt", permutation + " : " + totalElectricity);
         System.out.printf("%s wrote to to output.txt\n", permutation);
+        if (area != null)
+            area.append(permutation + " wrote to to output.txt\n");
         for (String ext : extensions)
         {
             File f = new File(baseOutputPath.getPath() + "\\" + permutation + ext);

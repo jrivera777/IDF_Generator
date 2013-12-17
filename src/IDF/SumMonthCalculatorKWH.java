@@ -19,7 +19,7 @@ public class SumMonthCalculatorKWH implements EnergyCalculator
             while (scan.hasNextLine())
             {
                 String[] lineValues = scan.nextLine().split(",");
-                electricity += Double.parseDouble(lineValues[1]); //second line is monthly facility usage
+                electricity += Double.parseDouble(lineValues[1]); //second column is monthly facility usage
             }
         }
         catch (IOException e)
