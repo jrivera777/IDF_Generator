@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -32,15 +33,16 @@ import org.xml.sax.SAXException;
 public class IDFGenerator
 {
     public static ProgramStyle pstyle;
-
+    public static int THREAD_COUNT = 5;
     /**
-     * *
+     *
      * Creates set of all possible IDF files for use in simulations using the
      * given base IDF file and defined Options files. Uses
      * ParametricPreProcessor found in EnergyPlus installations.
-     * 
-     * Pro: Relatively fast for number of files created.
-     * Con: Possibly requires large amount of disk storage
+     * <br/>
+     * <strong>Pro:</strong> Relatively fast for number of files created.
+     * <br/>
+     * <strong>Con:</strong> Possibly requires large amount of disk storage
      *
      * @param optionsPath XML file with defined options for all parametric
      * objects.
@@ -453,7 +455,7 @@ public class IDFGenerator
      * @param paramCount
      * @throws IOException
      */
-    public static void copyResults(File fromDir, FilenameFilter filter, String idfName, int paramCount) throws IOException
+    private static void copyResults(File fromDir, FilenameFilter filter, String idfName, int paramCount) throws IOException
     {
         File[] files = fromDir.listFiles(filter);
         File toDir = new File(fromDir.getPath() + "\\OutputIDFs");
@@ -478,11 +480,12 @@ public class IDFGenerator
     /**
      * Multi-threaded implementation of IDF creator. This function creates all 
      * possible IDFs, but instead runs their simulation right away and then 
-     * writes it's important output to a file. We end up with only a single file,
+     * writes their important output to a file. We end up with only a single file,
      * instead of many IDF files that still need to be simulated.
-     * 
-     * Pro: Saves storage space. Only one output file.
-     * Con: Slow!!! Attempts to run an energy simulation for each IDF created.
+     * <br/>
+     * <strong>Pro:</strong> Saves storage space. Only one output file.
+     * <br/>
+     * <strong>Con:</strong> Slow!!! Attempts to run an energy simulation for each IDF created.
      * 
      * @param optionsPath XML Options file.
      * @param baseIdf Base IDF file.
@@ -490,7 +493,7 @@ public class IDFGenerator
      * @param batchLoc Location of Epl-run.bat file.
      * @param weather Weather file for simulation (.epw). 
      */
-    public static void buildAndRunIDFs(File optionsPath, File baseIdf, File baseOutputPath, File batchLoc, File weather)
+    public static void buildAndRunIDFs(File optionsPath, File baseIdf, File baseOutputPath, File batchLoc, File weather) throws InterruptedException
     {
         validatePaths(baseOutputPath, optionsPath, baseIdf, null);
         Map<String, List<POption>> parametrics = readParametricOptions(optionsPath.getPath());
@@ -508,17 +511,23 @@ public class IDFGenerator
         generatePermutations(params, res, 0, "");
 
         // TESTING PURPOSES
-        ExecutorService exService = Executors.newFixedThreadPool(5);
-        for (int i = 0; i < 1; i++)
+        ExecutorService exService = Executors.newFixedThreadPool(THREAD_COUNT);
+        System.out.printf("Max Thread count: %d", THREAD_COUNT);
+        List<Callable<Object>> tasks = new ArrayList<Callable<Object>>();
+        for (int i = 0; i < 2; i++)
         {
-            exService.execute(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, res.get(i), parametrics, pstyle));
+            tasks.add(Executors.callable(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, res.get(i), parametrics, pstyle)));
+             //exService.execute(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, res.get(i), parametrics, pstyle));
         }
 
-//        System.out.printf("Trying to run %d Simulations!", res.size());
+//        System.out.printf("Trying to run %d Simulations!\n", res.size());
 //        for (String perm : res)
 //        {
-//            exService.execute(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, perm, parametrics, pstyle));
+//            tasks.add(Executors.callable(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, perm, parametrics, pstyle)));
+////            exService.execute(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, perm, parametrics, pstyle));
 //        }
+        
+//        exService.invokeAll(tasks);
         exService.shutdown();
     }
 
@@ -530,7 +539,7 @@ public class IDFGenerator
      * @param currList current List of strings being looked at
      * @param current Current permutation being built
      */
-    public static void generatePermutations(List<List<String>> Lists, List<String> result, int currList, String currPerm)
+    private static void generatePermutations(List<List<String>> Lists, List<String> result, int currList, String currPerm)
     {
         if (currList == Lists.size())
         {

@@ -31,7 +31,7 @@ public class IDFLoad_Run implements Runnable
     {
         ".audit", ".bnd", ".mdd", ".eio", ".err", ".eso",
         "Table.html", "Meter.csv", ".csv", ".mtd", ".mtr",
-        ".rdd", ".rvaudit", ".shd", ".svg", ".idf"
+        ".rdd", ".rvaudit", ".shd", ".svg", ".idf", "-PROC.csv"
     };
     private File baseIdf;
     private File baseOutputPath;
@@ -104,7 +104,8 @@ public class IDFLoad_Run implements Runnable
             // Epl-run.bat "IDF file no extension" "Output file name no extension" 
             // "exention(idf)" "Weather File with extension" "EP or NONE" "Pausing?(N)" 
             // "Col limit?(nolimit)" "Convert ESO?(Y) "Process CSV?(Y)"  "active count? ("")" "Multi-threaded?(Y)" 
-
+            
+            //NOTE: Path to Epl-run.bat file should probably NOT have spaces in it.
             ArrayList<String> commands = new ArrayList<String>()
             {
                 {
