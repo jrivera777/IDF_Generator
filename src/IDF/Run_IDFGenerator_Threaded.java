@@ -54,6 +54,16 @@ public class Run_IDFGenerator_Threaded
                     JOptionPane.showMessageDialog(null, "Missing input! Exiting...", "Missing Input", JOptionPane.ERROR_MESSAGE);
                     System.exit(0);
                 }
+
+                if (options == null || baseDir == null || base == null)
+                {
+                    JOptionPane.showMessageDialog(null, "Missing input! Exiting...", "Missing Input", JOptionPane.ERROR_MESSAGE);
+                    System.exit(0);
+                }
+                IDFGenerator.keep = JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(null,
+                        "Do you want to keep error files?", "Keep Error Files?", JOptionPane.YES_NO_OPTION)
+                        ? Run_IDFGenerator.KeepFiles.YES : Run_IDFGenerator.KeepFiles.NO;
+
                 IDFGenerator.pstyle = pstyle;
                 File dir = new File(baseDir.getPath() + "\\output.txt");
                 if (dir.exists())
@@ -64,9 +74,9 @@ public class Run_IDFGenerator_Threaded
                 IDFGenerator.buildAndRunIDFs(options, base, baseDir, eplRunDir, weather);
                 double endTime = System.currentTimeMillis();
                 double time = (endTime - startTime);
-                int seconds = (int)time / 1000 % 60;
-                int minutes = (int)((time / (1000 * 60)) % 60);
-                int hours = (int)((time / (1000 * 60 * 60)) % 60);
+                int seconds = (int) time / 1000 % 60;
+                int minutes = (int) ((time / (1000 * 60)) % 60);
+                int hours = (int) ((time / (1000 * 60 * 60)) % 60);
                 JOptionPane.showMessageDialog(null, String.format("IDFGenerator finished Running!!!\n"
                         + "Estimated duration of run: %2d:%2d:%2d", hours, minutes, seconds),
                         "Finished", JOptionPane.INFORMATION_MESSAGE);

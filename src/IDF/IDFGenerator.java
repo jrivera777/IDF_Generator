@@ -1,6 +1,7 @@
 package IDF;
 
 import IDF.Run_IDFGenerator.ProgramStyle;
+import IDF.Run_IDFGenerator.KeepFiles;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,7 @@ public class IDFGenerator
 {
 
     public static ProgramStyle pstyle;
+    public static KeepFiles keep;
     public static int THREAD_COUNT = 5;
 
     /**
@@ -481,10 +483,12 @@ public class IDFGenerator
     }
 
     /**
-     * Multi-threaded implementation of IDF creator. This function creates all
-     * possible IDFs, but instead runs their simulation right away and then
-     * writes their important output to a file. We end up with only a single
-     * file, instead of many IDF files that still need to be simulated. <br/>
+     * Multi-threaded implementation of IDF creator. This function doesn't just
+     * create all possible IDFs, but instead runs their simulation right away 
+     * and then writes their important output to a file. We end up with 
+     * only a single file, instead of many IDF files that still need 
+     * to be simulated. 
+     * <br/>
      * <strong>Pro:</strong> Saves storage space. Only one output file. <br/>
      * <strong>Con:</strong> Slow!!! Attempts to run an energy simulation for
      * each IDF created.
@@ -506,6 +510,7 @@ public class IDFGenerator
             area = new JTextArea();
             JScrollPane pane = new JScrollPane(area);
             outWindow.add(pane);
+            outWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         }
         validatePaths(baseOutputPath, optionsPath, baseIdf, null);
         Map<String, List<POption>> parametrics = readParametricOptions(optionsPath.getPath());
@@ -539,7 +544,10 @@ public class IDFGenerator
         System.out.printf("Trying to run %d Simulations!\n", res.size());
         for (String perm : res)
         {
-            tasks.add(Executors.callable(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, perm, parametrics, pstyle)));
+            if (area == null)
+                tasks.add(Executors.callable(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, perm, parametrics, pstyle, keep)));
+            else
+                tasks.add(Executors.callable(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, perm, parametrics, pstyle, keep, area)));
         }
 
         exService.invokeAll(tasks);

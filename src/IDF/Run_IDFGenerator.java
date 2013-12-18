@@ -13,6 +13,13 @@ public class Run_IDFGenerator
         GUI,
         CMD
     }
+
+    enum KeepFiles
+    {
+
+        YES,
+        NO
+    }
     public static final ProgramStyle pstyle = ProgramStyle.GUI;
 
     public static void main(String[] args)
@@ -39,11 +46,6 @@ public class Run_IDFGenerator
                 chooser.showOpenDialog(null);
                 File baseDir = chooser.getSelectedFile();
 
-                if (options == null || baseDir == null || base == null)
-                {
-                    JOptionPane.showMessageDialog(null, "Missing input! Exiting...", "Missing Input", JOptionPane.ERROR_MESSAGE);
-                    System.exit(0);
-                }
                 IDFGenerator.pstyle = pstyle;
                 IDFGenerator.GenerateFiles(options, base, baseDir, pppDir);
                 JOptionPane.showMessageDialog(null, "IDFGenerator finished Running!!!", "Finished", JOptionPane.INFORMATION_MESSAGE);

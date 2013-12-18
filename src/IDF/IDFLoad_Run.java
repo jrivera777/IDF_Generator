@@ -41,11 +41,12 @@ public class IDFLoad_Run implements Runnable
     private File weather_epw;
     private Map<String, List<POption>> parametrics;
     private Run_IDFGenerator.ProgramStyle pstyle;
+    private Run_IDFGenerator.KeepFiles keep;
     private JTextArea area;
 
     public IDFLoad_Run(File bidf, File bopp, File bLoc, File wthr,
             String perm, Map<String, List<POption>> params,
-            Run_IDFGenerator.ProgramStyle style)
+            Run_IDFGenerator.ProgramStyle style, Run_IDFGenerator.KeepFiles kp)
     {
         baseIdf = bidf;
         baseOutputPath = bopp;
@@ -54,13 +55,14 @@ public class IDFLoad_Run implements Runnable
         parametrics = params;
         pstyle = style;
         weather_epw = wthr;
+        keep = kp;
     }
 
     public IDFLoad_Run(File bidf, File bopp, File bLoc, File wthr,
             String perm, Map<String, List<POption>> params,
-            Run_IDFGenerator.ProgramStyle style, JTextArea ar)
+            Run_IDFGenerator.ProgramStyle style, Run_IDFGenerator.KeepFiles kp,JTextArea ar)
     {
-        this(bidf, bopp, bLoc, wthr, perm, params, style);
+        this(bidf, bopp, bLoc, wthr, perm, params, style, kp);
         area = ar;
     }
 
@@ -196,6 +198,8 @@ public class IDFLoad_Run implements Runnable
             area.append(permutation + " wrote to to output.txt\n");
         for (String ext : extensions)
         {
+            if (ext.equals(".err") && keep == keep.YES)
+                continue;
             File f = new File(baseOutputPath.getPath() + "\\" + permutation + ext);
             f.delete();
         }
