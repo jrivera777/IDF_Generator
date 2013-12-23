@@ -60,7 +60,7 @@ public class IDFLoad_Run implements Runnable
 
     public IDFLoad_Run(File bidf, File bopp, File bLoc, File wthr,
             String perm, Map<String, List<POption>> params,
-            Run_IDFGenerator.ProgramStyle style, Run_IDFGenerator.KeepFiles kp,JTextArea ar)
+            Run_IDFGenerator.ProgramStyle style, Run_IDFGenerator.KeepFiles kp, JTextArea ar)
     {
         this(bidf, bopp, bLoc, wthr, perm, params, style, kp);
         area = ar;
@@ -167,7 +167,7 @@ public class IDFLoad_Run implements Runnable
             while ((line = buffer.readLine()) != null)
             {
                 diff = System.currentTimeMillis() - time;
-                if (diff > 30000)
+                if (diff > 15000)
                 {
                     time = System.currentTimeMillis();
                     System.out.println("Simulation " + permutation + " still working...");
@@ -178,8 +178,13 @@ public class IDFLoad_Run implements Runnable
             System.out.println("Simulation " + permutation + " finished!");
             if (area != null)
                 area.append("Simulation " + permutation + " finished!\n");
-            if (p.exitValue() == 0) //normal exit
-                FileUtils.deleteDirectory(dir);
+            if (p.exitValue() != 0) //normal exit
+            {
+                System.out.printf("Something went wrong with permutation %s.\n", permutation);
+                if (area != null)
+                    area.append("Something went wrong with permutation " + permutation + ".\n");
+            }
+            FileUtils.deleteDirectory(dir);
         }
         catch (IOException e)
         {

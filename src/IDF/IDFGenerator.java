@@ -377,7 +377,7 @@ public class IDFGenerator
                 for (int i = 0; i < list.getLength(); i++)
                 {
                     Node pOpt = list.item(i);
-                    String paramName = pOpt.getAttributes().item(0).getNodeValue().trim();
+                    String paramName = pOpt.getAttributes().getNamedItem("id").getNodeValue().trim();
 
                     if (pOpt.getNodeType() == Node.ELEMENT_NODE)
                     {
@@ -529,7 +529,7 @@ public class IDFGenerator
 
 
         ExecutorService exService = Executors.newFixedThreadPool(THREAD_COUNT);
-        System.out.printf("Max Thread count: %d", THREAD_COUNT);
+        System.out.printf("Max Thread count: %d\n", THREAD_COUNT);
         List<Callable<Object>> tasks = new ArrayList<Callable<Object>>();
         outWindow.setVisible(true);
 //        // TESTING PURPOSES
