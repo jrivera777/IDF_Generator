@@ -39,7 +39,7 @@ public class IDFGenerator
 
     public static ProgramStyle pstyle;
     public static KeepFiles keep;
-    public static int THREAD_COUNT = 5;
+    public static int THREAD_COUNT = 4;
 
     /**
      *

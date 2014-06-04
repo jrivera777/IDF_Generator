@@ -2,18 +2,13 @@ package IDF;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import org.apache.commons.io.FileUtils;
 
 public class Run_IDFGenerator_Threaded
 {
-
     enum ProgramStyle
     {
-
         GUI,
         CMD
     }
@@ -22,8 +17,7 @@ public class Run_IDFGenerator_Threaded
     public static void main(String[] args) throws InterruptedException, IOException
     {
         //Set number of threads to run at once
-        IDFGenerator.THREAD_COUNT = 15;
-        switch (pstyle)
+        switch(pstyle)
         {
             case GUI:
             {
@@ -49,24 +43,44 @@ public class Run_IDFGenerator_Threaded
                 chooser.showOpenDialog(null);
                 File baseDir = chooser.getSelectedFile();
 
-                if (options == null || baseDir == null || base == null)
+                if(options == null || baseDir == null || base == null)
                 {
                     JOptionPane.showMessageDialog(null, "Missing input! Exiting...", "Missing Input", JOptionPane.ERROR_MESSAGE);
-                    System.exit(0);
+                    System.exit(-1);
                 }
 
-                if (options == null || baseDir == null || base == null)
+                int maxThreads = -1;
+                String tCnt = "";
+                while(maxThreads < 1)
                 {
-                    JOptionPane.showMessageDialog(null, "Missing input! Exiting...", "Missing Input", JOptionPane.ERROR_MESSAGE);
-                    System.exit(0);
+                    tCnt = JOptionPane.showInputDialog("Enter maximum number of threads to run (2-16 recommended):");
+                    if(tCnt == null)
+                    {
+                        JOptionPane.showMessageDialog(null, "Cancelling run!!", "Cancelling", JOptionPane.INFORMATION_MESSAGE);
+                        System.exit(0);
+                    }
+                    try
+                    {
+                        maxThreads = Integer.parseInt(tCnt);
+                    }
+                    catch(NumberFormatException e)
+                    {
+                        JOptionPane.showMessageDialog(null, "Please enter a positive integer value!");
+                    }
                 }
+
+                if(maxThreads > 16)
+                    JOptionPane.showMessageDialog(null, "Too many threads may slow down your machine!", "WARNING!!!", JOptionPane.WARNING_MESSAGE);
+
+                IDFGenerator.THREAD_COUNT = maxThreads;
+
                 IDFGenerator.keep = JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(null,
                         "Do you want to keep error files?", "Keep Error Files?", JOptionPane.YES_NO_OPTION)
                         ? Run_IDFGenerator.KeepFiles.YES : Run_IDFGenerator.KeepFiles.NO;
 
                 IDFGenerator.pstyle = pstyle;
                 File dir = new File(baseDir.getPath() + "\\output.txt");
-                if (dir.exists())
+                if(dir.exists())
                 {
                     dir.delete();
                 }
@@ -84,7 +98,7 @@ public class Run_IDFGenerator_Threaded
             }
             case CMD:
             {
-                if (args.length < 2)
+                if(args.length < 5)
                 {
                     System.err.println("Usage: java -jar "
                             + "IDFGenerator.jar <OptionsFile> "

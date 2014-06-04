@@ -27,7 +27,6 @@ public class IDFLoad_Run implements Runnable
 {
     // Extensions for file created by simulation and thread
     // Mostly used to delete them after successful finish
-
     private final String[] extensions =
     {
         ".audit", ".bnd", ".mdd", ".eio", ".err", ".eso",
@@ -72,16 +71,16 @@ public class IDFLoad_Run implements Runnable
         String permIdf = baseOutputPath.getPath() + "\\" + permutation + ".idf";
 
         System.out.println("Running permutation: " + permutation + "...");
-        if (area != null)
+        if(area != null)
             area.append("Running permutation: " + permutation + "...\n");
 
         try
         {
             FileUtils.copyFile(baseIdf, new File(permIdf));
         }
-        catch (IOException e)
+        catch(IOException e)
         {
-            if (pstyle == Run_IDFGenerator.ProgramStyle.CMD)
+            if(pstyle == Run_IDFGenerator.ProgramStyle.CMD)
                 System.err.println("Failed to copy base IDF file!!");
             else
                 JOptionPane.showMessageDialog(null, "Failed to copy base IDF file!!", "Copy Error", JOptionPane.ERROR_MESSAGE);
@@ -92,13 +91,13 @@ public class IDFLoad_Run implements Runnable
         // for this permutation
         String[] opts = permutation.split("-");
         int i = 0;
-        for (Map.Entry<String, List<POption>> entry : parametrics.entrySet())
+        for(Map.Entry<String, List<POption>> entry : parametrics.entrySet())
         {
             String val = opts[i];
             String replacement = "";
-            for (POption op : entry.getValue())
+            for(POption op : entry.getValue())
             {
-                if (val.equals(op.getValue()))
+                if(val.equals(op.getValue()))
                 {
                     replacement = op.getName();
                     break;
@@ -124,7 +123,6 @@ public class IDFLoad_Run implements Runnable
             //NOTE: Path to Epl-run.bat file should probably NOT have spaces in it.
             ArrayList<String> commands = new ArrayList<String>()
             {
-
                 
                 {
                     add("cmd");
@@ -148,7 +146,7 @@ public class IDFLoad_Run implements Runnable
             // Create new directory for this Simulation so as not to conflict
             // with any other simulations already running
             File dir = new File(permutation);
-            if (dir.mkdir())
+            if(dir.mkdir())
             {
                 pb.directory(dir);
             }
@@ -164,29 +162,29 @@ public class IDFLoad_Run implements Runnable
             InputStreamReader isr = new InputStreamReader(p.getInputStream());
             BufferedReader buffer = new BufferedReader(isr);
             String line = "";
-            while ((line = buffer.readLine()) != null)
+            while((line = buffer.readLine()) != null)
             {
                 diff = System.currentTimeMillis() - time;
-                if (diff > 15000)
+                if(diff > 15000)
                 {
                     time = System.currentTimeMillis();
                     System.out.println("Simulation " + permutation + " still working...");
-                    if (area != null)
+                    if(area != null)
                         area.append("Simulation " + permutation + " still working...\n");
                 }
             }
             System.out.println("Simulation " + permutation + " finished!");
-            if (area != null)
+            if(area != null)
                 area.append("Simulation " + permutation + " finished!\n");
-            if (p.exitValue() != 0) //normal exit
+            if(p.exitValue() != 0) //normal exit
             {
                 System.out.printf("Something went wrong with permutation %s.\n", permutation);
-                if (area != null)
+                if(area != null)
                     area.append("Something went wrong with permutation " + permutation + ".\n");
             }
             FileUtils.deleteDirectory(dir);
         }
-        catch (IOException e)
+        catch(IOException e)
         {
             e.printStackTrace();
         }
@@ -195,15 +193,34 @@ public class IDFLoad_Run implements Runnable
         // other data values that might be pulled in the future.
         // Implement EnergyCalculator Interface to handle new file formats
         EnergyCalculator calculator = new SumMonthCalculatorKWH();
-        double totalElectricity = calculator.CalculateFacilityElectricity(new File(baseOutputPath.getPath() + "\\" + permutation + "Meter.csv"));
-
-        OutputWriter.getInstance().writeLine(baseOutputPath.getPath() + "\\output.txt", permutation + " : " + totalElectricity);
-        System.out.printf("%s wrote to to output.txt\n", permutation);
-        if (area != null)
-            area.append(permutation + " wrote to to output.txt\n");
-        for (String ext : extensions)
+        boolean writeOutput = true;
+        String res = "";
+        double totalElectricity = -1;
+        try
         {
-            if (ext.equals(".err") && keep == keep.YES)
+            totalElectricity = calculator.CalculateFacilityElectricity(new File(baseOutputPath.getPath() + "\\" + permutation + "Meter.csv"));
+            res = permutation + " : " + totalElectricity;
+        }
+        catch(FileNotFoundException e)
+        {
+            res = "Failed to find file: " + baseOutputPath.getPath() + "\\" + permutation + "Meter.csv..." +
+                    "Check .ERR files if you chose to save them!";
+            writeOutput = false;
+        }
+        catch(IOException e)
+        {
+            res = e.getMessage();
+            e.printStackTrace();
+        }
+
+        OutputWriter.getInstance().writeLine(baseOutputPath.getPath() + "\\output.txt", res);
+        System.out.printf("%s wrote to to output.txt\n", permutation);
+        
+        if(area != null)
+            area.append(permutation + " wrote to to output.txt\n");
+        for(String ext : extensions)
+        {
+            if(ext.equals(".err") && keep == keep.YES)
                 continue;
             File f = new File(baseOutputPath.getPath() + "\\" + permutation + ext);
             f.delete();
@@ -233,9 +250,9 @@ public class IDFLoad_Run implements Runnable
             output = new FileOutputStream(fileName);
             IOUtils.write(content, output);
         }
-        catch (IOException e)
+        catch(IOException e)
         {
-            if (pstyle == Run_IDFGenerator.ProgramStyle.CMD)
+            if(pstyle == Run_IDFGenerator.ProgramStyle.CMD)
                 System.err.println("Something went wrong replacing unused parameter!!!");
             else
                 JOptionPane.showMessageDialog(null, "Something went wrong replacing unused parameter!!!",
@@ -247,12 +264,12 @@ public class IDFLoad_Run implements Runnable
         {
             try
             {
-                if (input != null)
+                if(input != null)
                     input.close();
-                if (output != null)
+                if(output != null)
                     output.close();
             }
-            catch (IOException ex)
+            catch(IOException ex)
             {
             }
         }
