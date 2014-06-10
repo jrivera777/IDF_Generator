@@ -220,7 +220,7 @@ public class IDFLoad_Run implements Runnable
             area.append(permutation + " wrote to to output.txt\n");
         for(String ext : extensions)
         {
-            if(ext.equals(".err") && keep == keep.YES)
+            if(ext.equals(".err") && keep == Run_IDFGenerator.KeepFiles.YES)
                 continue;
             File f = new File(baseOutputPath.getPath() + "\\" + permutation + ext);
             f.delete();
@@ -245,7 +245,7 @@ public class IDFLoad_Run implements Runnable
             String content = IOUtils.toString(input);
             Pattern p = Pattern.compile("\\$" + param + ",\\s*(!-\\s*ignore)*");
             content = p.matcher(content).replaceAll(
-                    Matcher.quoteReplacement(rplc + ", !- Current Value"));
+                    Matcher.quoteReplacement(rplc + ", !- Current Value\n"));
 
             output = new FileOutputStream(fileName);
             IOUtils.write(content, output);

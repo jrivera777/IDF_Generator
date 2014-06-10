@@ -7,14 +7,14 @@ import javax.swing.JOptionPane;
 public class Run_IDFGenerator
 {
 
-    enum ProgramStyle
+    public enum ProgramStyle
     {
 
         GUI,
         CMD
     }
 
-    enum KeepFiles
+    public enum KeepFiles
     {
 
         YES,

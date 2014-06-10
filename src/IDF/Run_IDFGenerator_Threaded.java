@@ -92,7 +92,7 @@ public class Run_IDFGenerator_Threaded
                 int minutes = (int) ((time / (1000 * 60)) % 60);
                 int hours = (int) ((time / (1000 * 60 * 60)) % 60);
                 JOptionPane.showMessageDialog(null, String.format("IDFGenerator finished Running!!!\n"
-                        + "Estimated duration of run: %2d:%2d:%2d", hours, minutes, seconds),
+                        + "Estimated duration of run: %02d:%02d:%02d", hours, minutes, seconds),
                         "Finished", JOptionPane.INFORMATION_MESSAGE);
                 break;
             }
