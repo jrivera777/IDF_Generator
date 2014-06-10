@@ -1,7 +1,5 @@
 package IDF;
 
-import IDF.Run_IDFGenerator.ProgramStyle;
-import IDF.Run_IDFGenerator.KeepFiles;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +34,16 @@ import org.xml.sax.SAXException;
  */
 public class IDFGenerator
 {
-
+    public enum ProgramStyle
+    {
+        GUI,
+        CMD
+    }
+    public enum KeepFiles
+    {
+        YES,
+        NO
+    }
     public static ProgramStyle pstyle;
     public static KeepFiles keep;
     public static int THREAD_COUNT = 4;
@@ -65,16 +72,15 @@ public class IDFGenerator
         final String bTemp = baseIdf.getName().substring(0, baseIdf.getName().indexOf(".idf"));
         FilenameFilter fnf =
                 new FilenameFilter()
-                {
-
-                    @Override
-                    public boolean accept(File dir, String name)
-                    {
-                        return !name.equalsIgnoreCase(bName)
-                                && !name.equalsIgnoreCase(bTemp + "-temp.idf")
-                                && name.toLowerCase().endsWith(".idf");
-                    }
-                };
+        {
+            @Override
+            public boolean accept(File dir, String name)
+            {
+                return !name.equalsIgnoreCase(bName)
+                        && !name.equalsIgnoreCase(bTemp + "-temp.idf")
+                        && name.toLowerCase().endsWith(".idf");
+            }
+        };
 
         //load parametric options
         Map<String, List<POption>> parametrics = readParametricOptions(optionsPath.getPath());
@@ -87,9 +93,9 @@ public class IDFGenerator
         {
             FileUtils.copyFile(baseIdf, new File(baseTempName));
         }
-        catch (IOException e)
+        catch(IOException e)
         {
-            if (pstyle == ProgramStyle.CMD)
+            if(pstyle == ProgramStyle.CMD)
                 System.err.println("Failed to copy base IDF file!!");
             else
                 JOptionPane.showMessageDialog(null, "Failed to copy base IDF file!!", "Copy Error", JOptionPane.ERROR_MESSAGE);
@@ -108,14 +114,14 @@ public class IDFGenerator
         {
             runPPP(pppDir.getPath(), baseTempName);
         }
-        catch (InterruptedException ex)
+        catch(InterruptedException ex)
         {
             System.err.println(ex.getMessage());
             System.exit(-1);
         }
-        catch (IOException ex)
+        catch(IOException ex)
         {
-            if (pstyle == ProgramStyle.CMD)
+            if(pstyle == ProgramStyle.CMD)
             {
                 System.err.printf("Something went wrong running the parametric"
                         + "preprocessor program!!! Check %s error file, if one exists, for details.", baseTempName);
@@ -132,15 +138,15 @@ public class IDFGenerator
 
         //apply same process for every other parameter on all files
         //in the directory (which should be growing)
-        while (!parametrics.isEmpty())
+        while(!parametrics.isEmpty())
         {
             param = parametrics.keySet().toArray()[0].toString();
             pOpts = parametrics.remove(param);
 
             File[] idfFiles = baseIdfPath.listFiles(fnf);
-            for (File idf : idfFiles)
+            for(File idf : idfFiles)
             {
-                if (countDashes(idf.getName()) == dashCount)
+                if(countDashes(idf.getName()) == dashCount)
                 {
                     replaceUnusedParameter(idf.getPath(), param);
                     addParametricObjects(idf.getPath(), param, pOpts);
@@ -148,7 +154,7 @@ public class IDFGenerator
                     {
                         runPPP(pppDir.getPath(), idf.getPath());
                     }
-                    catch (Exception e)
+                    catch(Exception e)
                     {
                     }
                 }
@@ -166,7 +172,6 @@ public class IDFGenerator
         {
             FilenameFilter filter = new FilenameFilter()
             {
-
                 @Override
                 public boolean accept(File dir, String name)
                 {
@@ -178,7 +183,7 @@ public class IDFGenerator
             copyResults(baseIdfPath, fnf, bTemp, paramMax);
             cleanUpFiles(baseIdfPath, filter);
         }
-        catch (Exception e)
+        catch(Exception e)
         {
             e.printStackTrace();
         }
@@ -188,30 +193,30 @@ public class IDFGenerator
     private static void validatePaths(File dir, File options, File base, File ppp)
     {
         boolean quit = false;
-        if (dir != null && !dir.isDirectory())
+        if(dir != null && !dir.isDirectory())
         {
             System.err.printf("%s is not a directory!!\n", dir.getName());
             quit = true;
         }
-        if (options != null && !options.isFile() || !options.getName().toLowerCase().endsWith(".xml"))
+        if(options != null && !options.isFile() || !options.getName().toLowerCase().endsWith(".xml"))
         {
             System.err.printf("%s is not an XML file!!\n", options.getName());
             quit = true;
         }
-        if (base != null && !base.isFile() || !base.getName().toLowerCase().endsWith(".idf"))
+        if(base != null && !base.isFile() || !base.getName().toLowerCase().endsWith(".idf"))
         {
             System.err.printf("%s is not an IDF file!!\n", base.getName());
             quit = true;
         }
-        if (ppp != null && !ppp.isDirectory())
+        if(ppp != null && !ppp.isDirectory())
         {
             System.err.printf("%s is not a directory!!\n", dir.getName());
             quit = true;
         }
 
-        if (quit)
+        if(quit)
         {
-            if (pstyle == ProgramStyle.CMD)
+            if(pstyle == ProgramStyle.CMD)
                 System.err.println("Quiting...");
             else
                 JOptionPane.showMessageDialog(null, "Check your input files!", "Input Error", JOptionPane.ERROR_MESSAGE);
@@ -244,9 +249,9 @@ public class IDFGenerator
             output = new FileOutputStream(fileName);
             IOUtils.write(content, output);
         }
-        catch (IOException e)
+        catch(IOException e)
         {
-            if (pstyle == ProgramStyle.CMD)
+            if(pstyle == ProgramStyle.CMD)
                 System.err.println("Something went wrong replacing unused parameter!!!");
             else
                 JOptionPane.showMessageDialog(null, "Something went wrong replacing unused parameter!!!",
@@ -257,12 +262,12 @@ public class IDFGenerator
         {
             try
             {
-                if (input != null)
+                if(input != null)
                     input.close();
-                if (output != null)
+                if(output != null)
                     output.close();
             }
-            catch (IOException ex)
+            catch(IOException ex)
             {
             }
         }
@@ -291,9 +296,9 @@ public class IDFGenerator
 
             out.printf("\t$%s, !-Parameter Name\n", param);
             //write out parameter options.
-            for (int i = 0; i < pOpts.size(); i++)
+            for(int i = 0; i < pOpts.size(); i++)
             {
-                if (i == pOpts.size() - 1)
+                if(i == pOpts.size() - 1)
                     out.printf("\t%s; !-Value %d\n", pOpts.get(i).getName(), i + 1);
                 else
                     out.printf("\t%s, !-Value %d\n", pOpts.get(i).getName(), i + 1);
@@ -303,19 +308,19 @@ public class IDFGenerator
             out.println();
             out.println("  Parametric:FileNameSuffix,");
             out.println("\tNames,");
-            for (int i = 0; i < pOpts.size(); i++)
+            for(int i = 0; i < pOpts.size(); i++)
             {
-                if (i == pOpts.size() - 1)
+                if(i == pOpts.size() - 1)
                     out.printf("\t%s;\n", pOpts.get(i).getValue());
                 else
                     out.printf("\t%s,\n", pOpts.get(i).getValue());
             }
         }
-        catch (IOException e)
+        catch(IOException e)
         {
-            if (out != null)
+            if(out != null)
                 out.close();
-            if (pstyle == ProgramStyle.CMD)
+            if(pstyle == ProgramStyle.CMD)
                 System.err.println("Something went wrong adding parametric objects!!!");
             else
                 JOptionPane.showMessageDialog(null, "Something went wrong adding parametric objects!!!", "Parametric Object Error", JOptionPane.ERROR_MESSAGE);
@@ -323,7 +328,7 @@ public class IDFGenerator
         }
         finally
         {
-            if (out != null)
+            if(out != null)
                 out.close();
         }
     }
@@ -372,27 +377,27 @@ public class IDFGenerator
             docEle.normalize();
 
             NodeList list = docEle.getElementsByTagName("ParametricOption");
-            if (list != null && list.getLength() > 0)
+            if(list != null && list.getLength() > 0)
             {
-                for (int i = 0; i < list.getLength(); i++)
+                for(int i = 0; i < list.getLength(); i++)
                 {
                     Node pOpt = list.item(i);
                     String paramName = pOpt.getAttributes().getNamedItem("id").getNodeValue().trim();
 
-                    if (pOpt.getNodeType() == Node.ELEMENT_NODE)
+                    if(pOpt.getNodeType() == Node.ELEMENT_NODE)
                     {
                         Element elem = (Element) pOpt;
                         NodeList options = elem.getElementsByTagName("Option");
-                        if (options != null && options.getLength() > 0)
+                        if(options != null && options.getLength() > 0)
                         {
-                            for (int j = 0; j < options.getLength(); j++)
+                            for(int j = 0; j < options.getLength(); j++)
                             {
                                 Node opt = options.item(j);
                                 String optionName = opt.getChildNodes().item(0).getNodeValue().trim();
                                 String value = opt.getAttributes().item(0).getNodeValue().trim();
 
                                 List<POption> opts = params.get(paramName);
-                                if (opts == null)
+                                if(opts == null)
                                 {
                                     opts = new ArrayList<POption>();
                                     opts.add(new POption(optionName, value));
@@ -409,15 +414,15 @@ public class IDFGenerator
                 }
             }
         }
-        catch (ParserConfigurationException pce)
+        catch(ParserConfigurationException pce)
         {
             pce.printStackTrace();
         }
-        catch (SAXException se)
+        catch(SAXException se)
         {
             se.printStackTrace();
         }
-        catch (IOException ioe)
+        catch(IOException ioe)
         {
             ioe.printStackTrace();
         }
@@ -435,9 +440,9 @@ public class IDFGenerator
     {
         char[] letters = fName.toCharArray();
         int count = 0;
-        for (int i = 0; i < letters.length; i++)
+        for(int i = 0; i < letters.length; i++)
         {
-            if (letters[i] == '-')
+            if(letters[i] == '-')
                 count++;
         }
         return count;
@@ -446,7 +451,7 @@ public class IDFGenerator
     private static void cleanUpFiles(File dir, FilenameFilter filter) throws IOException
     {
         File[] files = dir.listFiles(filter);
-        for (int i = 0; i < files.length; i++)
+        for(int i = 0; i < files.length; i++)
             files[i].deleteOnExit();
     }
 
@@ -465,18 +470,18 @@ public class IDFGenerator
         File[] files = fromDir.listFiles(filter);
         File toDir = new File(fromDir.getPath() + "\\OutputIDFs");
         boolean madeDir = toDir.mkdir();
-        if (!madeDir)
+        if(!madeDir)
             throw new IOException("Failed to create Output Directory.  "
                     + "Stopped copying results over");
-        for (int i = 0; i < files.length; i++)
+        for(int i = 0; i < files.length; i++)
         {
             Pattern p = Pattern.compile(idfName + "-temp-(.*)");
             Matcher m = p.matcher(files[i].getName());
-            if (m.find())
+            if(m.find())
             {
                 String adjustedName = "\\" + m.group(1);
                 File fileCopy = new File(toDir.getPath() + adjustedName);
-                if (countDashes(files[i].getName()) - 1 == paramCount)
+                if(countDashes(files[i].getName()) - 1 == paramCount)
                     FileUtils.copyFile(files[i], fileCopy);
             }
         }
@@ -484,10 +489,9 @@ public class IDFGenerator
 
     /**
      * Multi-threaded implementation of IDF creator. This function doesn't just
-     * create all possible IDFs, but instead runs their simulation right away 
-     * and then writes their important output to a file. We end up with 
-     * only a single file, instead of many IDF files that still need 
-     * to be simulated. 
+     * create all possible IDFs, but instead runs their simulation right away
+     * and then writes their important output to a file. We end up with only a
+     * single file, instead of many IDF files that still need to be simulated.
      * <br/>
      * <strong>Pro:</strong> Saves storage space. Only one output file. <br/>
      * <strong>Con:</strong> Slow!!! Attempts to run an energy simulation for
@@ -503,7 +507,7 @@ public class IDFGenerator
     {
         JFrame outWindow = null;
         JTextArea area = null;
-        if (pstyle == pstyle.GUI)
+        if(pstyle == pstyle.GUI)
         {
             outWindow = new JFrame("IDF Generator Info");
             outWindow.setSize(300, 300);
@@ -516,10 +520,10 @@ public class IDFGenerator
         Map<String, List<POption>> parametrics = readParametricOptions(optionsPath.getPath());
 
         List<List<String>> params = new ArrayList<List<String>>();
-        for (List<POption> optList : parametrics.values())
+        for(List<POption> optList : parametrics.values())
         {
             ArrayList<String> opts = new ArrayList<String>();
-            for (POption opt : optList)
+            for(POption opt : optList)
                 opts.add(opt.getValue());
             params.add(opts);
         }
@@ -542,9 +546,9 @@ public class IDFGenerator
 //        }
 
         System.out.printf("Trying to run %d Simulations!\n", res.size());
-        for (String perm : res)
+        for(String perm : res)
         {
-            if (area == null)
+            if(area == null)
                 tasks.add(Executors.callable(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, perm, parametrics, pstyle, keep)));
             else
                 tasks.add(Executors.callable(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, perm, parametrics, pstyle, keep, area)));
@@ -552,7 +556,7 @@ public class IDFGenerator
 
         exService.invokeAll(tasks);
         exService.shutdown();
-        if (outWindow != null)
+        if(outWindow != null)
             outWindow.dispose();
     }
 
@@ -566,13 +570,13 @@ public class IDFGenerator
      */
     private static void generatePermutations(List<List<String>> Lists, List<String> result, int currList, String currPerm)
     {
-        if (currList == Lists.size())
+        if(currList == Lists.size())
         {
             result.add(currPerm);
             return;
         }
 
-        for (int i = 0; i < Lists.get(currList).size(); ++i)
+        for(int i = 0; i < Lists.get(currList).size(); ++i)
         {
             generatePermutations(Lists, result, currList + 1,
                     currPerm.equals("") ? Lists.get(currList).get(i) : currPerm + "-" + Lists.get(currList).get(i));

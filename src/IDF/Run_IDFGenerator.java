@@ -1,25 +1,19 @@
 package IDF;
 
+import IDF.IDFGenerator.ProgramStyle;
 import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
+/**
+ * Class runs IDF_Generator  program that creates all possible combinations
+ * of IDF files from some base IDF file and a set of options.
+ * 
+ * @author Joseph Rivera
+ * @deprecated
+ */
 public class Run_IDFGenerator
 {
-
-    public enum ProgramStyle
-    {
-
-        GUI,
-        CMD
-    }
-
-    public enum KeepFiles
-    {
-
-        YES,
-        NO
-    }
     public static final ProgramStyle pstyle = ProgramStyle.GUI;
 
     public static void main(String[] args)

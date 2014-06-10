@@ -39,13 +39,13 @@ public class IDFLoad_Run implements Runnable
     private String permutation;
     private File weather_epw;
     private Map<String, List<POption>> parametrics;
-    private Run_IDFGenerator.ProgramStyle pstyle;
-    private Run_IDFGenerator.KeepFiles keep;
+    private IDFGenerator.ProgramStyle pstyle;
+    private IDFGenerator.KeepFiles keep;
     private JTextArea area;
 
     public IDFLoad_Run(File bidf, File bopp, File bLoc, File wthr,
             String perm, Map<String, List<POption>> params,
-            Run_IDFGenerator.ProgramStyle style, Run_IDFGenerator.KeepFiles kp)
+            IDFGenerator.ProgramStyle style, IDFGenerator.KeepFiles kp)
     {
         baseIdf = bidf;
         baseOutputPath = bopp;
@@ -59,7 +59,7 @@ public class IDFLoad_Run implements Runnable
 
     public IDFLoad_Run(File bidf, File bopp, File bLoc, File wthr,
             String perm, Map<String, List<POption>> params,
-            Run_IDFGenerator.ProgramStyle style, Run_IDFGenerator.KeepFiles kp, JTextArea ar)
+            IDFGenerator.ProgramStyle style, IDFGenerator.KeepFiles kp, JTextArea ar)
     {
         this(bidf, bopp, bLoc, wthr, perm, params, style, kp);
         area = ar;
@@ -70,17 +70,14 @@ public class IDFLoad_Run implements Runnable
     {
         String permIdf = baseOutputPath.getPath() + "\\" + permutation + ".idf";
 
-        System.out.println("Running permutation: " + permutation + "...");
-        if(area != null)
-            area.append("Running permutation: " + permutation + "...\n");
-
+        writeOutMessage("Running permutation: " + permutation + "...");
         try
         {
             FileUtils.copyFile(baseIdf, new File(permIdf));
         }
         catch(IOException e)
         {
-            if(pstyle == Run_IDFGenerator.ProgramStyle.CMD)
+            if(pstyle == IDFGenerator.ProgramStyle.CMD)
                 System.err.println("Failed to copy base IDF file!!");
             else
                 JOptionPane.showMessageDialog(null, "Failed to copy base IDF file!!", "Copy Error", JOptionPane.ERROR_MESSAGE);
@@ -168,19 +165,13 @@ public class IDFLoad_Run implements Runnable
                 if(diff > 15000)
                 {
                     time = System.currentTimeMillis();
-                    System.out.println("Simulation " + permutation + " still working...");
-                    if(area != null)
-                        area.append("Simulation " + permutation + " still working...\n");
+                    writeOutMessage("Simulation " + permutation + " still working...");
                 }
             }
-            System.out.println("Simulation " + permutation + " finished!");
-            if(area != null)
-                area.append("Simulation " + permutation + " finished!\n");
+            writeOutMessage("Simulation " + permutation + " finished!");
             if(p.exitValue() != 0) //normal exit
             {
-                System.out.printf("Something went wrong with permutation %s.\n", permutation);
-                if(area != null)
-                    area.append("Something went wrong with permutation " + permutation + ".\n");
+                writeOutMessage("Something went wrong with permutation " + permutation + ".");
             }
             FileUtils.deleteDirectory(dir);
         }
@@ -203,8 +194,8 @@ public class IDFLoad_Run implements Runnable
         }
         catch(FileNotFoundException e)
         {
-            res = "Failed to find file: " + baseOutputPath.getPath() + "\\" + permutation + "Meter.csv..." +
-                    "Check .ERR files if you chose to save them!";
+            res = "Failed to find file: " + baseOutputPath.getPath() + "\\" + permutation + "Meter.csv..."
+                    + "Check .ERR files if you chose to save them!";
             writeOutput = false;
         }
         catch(IOException e)
@@ -214,13 +205,11 @@ public class IDFLoad_Run implements Runnable
         }
 
         OutputWriter.getInstance().writeLine(baseOutputPath.getPath() + "\\output.txt", res);
-        System.out.printf("%s wrote to to output.txt\n", permutation);
+        writeOutMessage(permutation + " wrote to to output.txt");
         
-        if(area != null)
-            area.append(permutation + " wrote to to output.txt\n");
         for(String ext : extensions)
         {
-            if(ext.equals(".err") && keep == Run_IDFGenerator.KeepFiles.YES)
+            if(ext.equals(".err") && keep == IDFGenerator.KeepFiles.YES)
                 continue;
             File f = new File(baseOutputPath.getPath() + "\\" + permutation + ext);
             f.delete();
@@ -252,7 +241,7 @@ public class IDFLoad_Run implements Runnable
         }
         catch(IOException e)
         {
-            if(pstyle == Run_IDFGenerator.ProgramStyle.CMD)
+            if(pstyle == IDFGenerator.ProgramStyle.CMD)
                 System.err.println("Something went wrong replacing unused parameter!!!");
             else
                 JOptionPane.showMessageDialog(null, "Something went wrong replacing unused parameter!!!",
@@ -272,6 +261,16 @@ public class IDFLoad_Run implements Runnable
             catch(IOException ex)
             {
             }
+        }
+    }
+
+    public void writeOutMessage(String message)
+    {
+        System.out.println(message);
+        if(area != null)
+        {
+            area.append(message + "\n");
+            area.setCaretPosition(area.getDocument().getLength());
         }
     }
 }
