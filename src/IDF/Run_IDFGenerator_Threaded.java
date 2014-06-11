@@ -12,7 +12,6 @@ public class Run_IDFGenerator_Threaded
         GUI,
         CMD
     }
-    
     public static final IDFGenerator.ProgramStyle pstyle = IDFGenerator.ProgramStyle.GUI;
 
     public static void main(String[] args) throws InterruptedException, IOException
@@ -81,9 +80,22 @@ public class Run_IDFGenerator_Threaded
 
                 IDFGenerator.THREAD_COUNT = maxThreads;
 
-                IDFGenerator.keep = JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(null,
+                IDFGenerator.keepErr = JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(null,
                         "Do you want to keep error files?", "Keep Error Files?", JOptionPane.YES_NO_OPTION)
                         ? IDFGenerator.KeepFiles.YES : IDFGenerator.KeepFiles.NO;
+
+                IDFGenerator.keepIdf = JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(null,
+                        "Do you want to keep generated IDF files?",
+                        "Keep Error Files?", JOptionPane.YES_NO_OPTION)
+                        ? IDFGenerator.KeepFiles.YES : IDFGenerator.KeepFiles.NO;
+
+                if(IDFGenerator.keepIdf == IDFGenerator.KeepFiles.YES)
+                {
+                    JOptionPane.showMessageDialog(null, "WARNING!!! Saving "
+                            + "IDF files may result in the use of large amounts "
+                            + "of storage space!", "WARNING: Saving IDFs",
+                            JOptionPane.WARNING_MESSAGE);
+                }
 
                 IDFGenerator.pstyle = pstyle;
                 File dir = new File(baseDir.getPath() + "\\output.txt");

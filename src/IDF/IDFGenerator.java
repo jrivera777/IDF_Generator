@@ -45,7 +45,8 @@ public class IDFGenerator
         NO
     }
     public static ProgramStyle pstyle;
-    public static KeepFiles keep;
+    public static KeepFiles keepErr;
+    public static KeepFiles keepIdf;
     public static int THREAD_COUNT = 4;
 
     /**
@@ -549,9 +550,9 @@ public class IDFGenerator
         for(String perm : res)
         {
             if(area == null)
-                tasks.add(Executors.callable(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, perm, parametrics, pstyle, keep)));
+                tasks.add(Executors.callable(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, perm, parametrics, pstyle)));
             else
-                tasks.add(Executors.callable(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, perm, parametrics, pstyle, keep, area)));
+                tasks.add(Executors.callable(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, perm, parametrics, pstyle, area)));
         }
 
         exService.invokeAll(tasks);

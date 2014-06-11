@@ -40,12 +40,11 @@ public class IDFLoad_Run implements Runnable
     private File weather_epw;
     private Map<String, List<POption>> parametrics;
     private IDFGenerator.ProgramStyle pstyle;
-    private IDFGenerator.KeepFiles keep;
     private JTextArea area;
 
     public IDFLoad_Run(File bidf, File bopp, File bLoc, File wthr,
             String perm, Map<String, List<POption>> params,
-            IDFGenerator.ProgramStyle style, IDFGenerator.KeepFiles kp)
+            IDFGenerator.ProgramStyle style)
     {
         baseIdf = bidf;
         baseOutputPath = bopp;
@@ -54,14 +53,13 @@ public class IDFLoad_Run implements Runnable
         parametrics = params;
         pstyle = style;
         weather_epw = wthr;
-        keep = kp;
     }
 
     public IDFLoad_Run(File bidf, File bopp, File bLoc, File wthr,
             String perm, Map<String, List<POption>> params,
-            IDFGenerator.ProgramStyle style, IDFGenerator.KeepFiles kp, JTextArea ar)
+            IDFGenerator.ProgramStyle style, JTextArea ar)
     {
-        this(bidf, bopp, bLoc, wthr, perm, params, style, kp);
+        this(bidf, bopp, bLoc, wthr, perm, params, style);
         area = ar;
     }
 
@@ -206,10 +204,12 @@ public class IDFLoad_Run implements Runnable
 
         OutputWriter.getInstance().writeLine(baseOutputPath.getPath() + "\\output.txt", res);
         writeOutMessage(permutation + " wrote to to output.txt");
-        
+
         for(String ext : extensions)
         {
-            if(ext.equals(".err") && keep == IDFGenerator.KeepFiles.YES)
+            if(ext.equals(".err") && IDFGenerator.keepErr == IDFGenerator.KeepFiles.YES)
+                continue;
+            if(ext.equals(".idf") && IDFGenerator.keepIdf == IDFGenerator.KeepFiles.YES)
                 continue;
             File f = new File(baseOutputPath.getPath() + "\\" + permutation + ext);
             f.delete();
