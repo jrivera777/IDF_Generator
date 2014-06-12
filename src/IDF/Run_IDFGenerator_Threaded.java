@@ -2,6 +2,8 @@ package IDF;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.InputMismatchException;
+import java.util.Scanner;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
@@ -12,7 +14,7 @@ public class Run_IDFGenerator_Threaded
         GUI,
         CMD
     }
-    public static final IDFGenerator.ProgramStyle pstyle = IDFGenerator.ProgramStyle.GUI;
+    static final IDFGenerator.ProgramStyle pstyle = IDFGenerator.ProgramStyle.CMD;
 
     public static void main(String[] args) throws InterruptedException, IOException
     {
@@ -40,9 +42,9 @@ public class Run_IDFGenerator_Threaded
                 chooser.setDialogTitle("Select Output Directory");
                 chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 chooser.showOpenDialog(null);
-                File baseDir = chooser.getSelectedFile();
+                File outputDir = chooser.getSelectedFile();
 
-                if(options == null || baseDir == null || base == null)
+                if(options == null || outputDir == null || base == null)
                 {
                     JOptionPane.showMessageDialog(null, "Missing input! "
                             + "Exiting...", "Missing Input",
@@ -81,11 +83,13 @@ public class Run_IDFGenerator_Threaded
                 IDFGenerator.THREAD_COUNT = maxThreads;
 
                 IDFGenerator.keepErr = JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(null,
-                        "Do you want to keep error files?", "Keep Error Files?", JOptionPane.YES_NO_OPTION)
-                        ? IDFGenerator.KeepFiles.YES : IDFGenerator.KeepFiles.NO;
+                        "Do you want to keep error files?", "Keep Error Files?",
+                        JOptionPane.YES_NO_OPTION)
+                        ? IDFGenerator.KeepFiles.YES
+                        : IDFGenerator.KeepFiles.NO;
 
                 IDFGenerator.keepIdf = JOptionPane.YES_OPTION == JOptionPane.showConfirmDialog(null,
-                        "Do you want to keep generated IDF files?",
+                        "Do you want to keep generated IDFs?",
                         "Keep Error Files?", JOptionPane.YES_NO_OPTION)
                         ? IDFGenerator.KeepFiles.YES : IDFGenerator.KeepFiles.NO;
 
@@ -98,20 +102,23 @@ public class Run_IDFGenerator_Threaded
                 }
 
                 IDFGenerator.pstyle = pstyle;
-                File dir = new File(baseDir.getPath() + "\\output.txt");
+                File dir = new File(outputDir.getPath() + "\\output.txt");
                 if(dir.exists())
                 {
                     dir.delete();
                 }
                 double startTime = System.currentTimeMillis();
-                IDFGenerator.buildAndRunIDFs(options, base, baseDir, eplRunDir, weather);
+                IDFGenerator.buildAndRunIDFs(options, base, outputDir,
+                        eplRunDir, weather);
                 double endTime = System.currentTimeMillis();
                 double time = (endTime - startTime);
                 int seconds = (int) time / 1000 % 60;
                 int minutes = (int) ((time / (1000 * 60)) % 60);
                 int hours = (int) ((time / (1000 * 60 * 60)) % 60);
-                JOptionPane.showMessageDialog(null, String.format("IDFGenerator finished Running!!!\n"
-                        + "Estimated duration of run: %02d:%02d:%02d", hours, minutes, seconds),
+                JOptionPane.showMessageDialog(null,
+                        String.format("IDFGenerator finished Running!!!\n"
+                        + "Estimated duration of run: %02d:%02d:%02d", hours,
+                        minutes, seconds),
                         "Finished", JOptionPane.INFORMATION_MESSAGE);
                 break;
             }
@@ -121,18 +128,82 @@ public class Run_IDFGenerator_Threaded
                 {
                     System.err.println("Usage: java -jar "
                             + "IDFGenerator.jar <BaseIDF>"
-                            + "<OptionsFile> <WeatherFile> <OutputDirectory> "
-                            + "<BatchFileDirectory>");
+                            + "<OptionsFile> <WeatherFile> "
+                            + "<BatchFileDirectory> <OutputDirectory> ");
                     System.exit(-1);
                 }
 
                 File base = new File(args[0]);
                 File options = new File(args[1]);
-                File baseDir = new File(args[2]);
-                File weather = new File(args[3]);
-                File eplRunDir = new File(args[4]);
+                File weather = new File(args[2]);
+                File eplRunDir = new File(args[3]);
+                File outputDir = new File(args[4]);
 
-                IDFGenerator.buildAndRunIDFs(options, base, baseDir, eplRunDir, weather);
+                System.out.printf("Base IDF: %s\n", base.getName());
+                System.out.printf("Parametric Options File: %s\n", options.getName());
+                System.out.printf("Weather File: %s\n", weather.getName());
+                System.out.printf("Epl-Run.bat Directory: %s\\\n", eplRunDir.getPath());
+                System.out.printf("Output Directory: %s\\\n", outputDir.getPath());
+                System.out.println();
+
+                Scanner keyboard = new Scanner(System.in);
+
+                int maxThreads = -1;
+                String tCnt = "";
+                while(maxThreads < 1)
+                {
+                    System.out.print("Enter maximum number of threads to "
+                            + "run (2-16 recommended):");
+
+                    try
+                    {
+                        maxThreads = keyboard.nextInt();
+                    }
+                    catch(InputMismatchException e)
+                    {
+                        System.out.println("Please enter a positive "
+                                + "integer value!");
+                    }
+                }
+
+                if(maxThreads > 16)
+                    System.err.println("Too many threads may significantly slow"
+                            + " down your machine while running!");
+
+                IDFGenerator.THREAD_COUNT = maxThreads;
+
+                String input = "";
+                while(input.equals("") || !(input.toLowerCase().charAt(0) == 'y'
+                        || input.toLowerCase().charAt(0) == 'n'))
+                {
+                    System.out.print("Keep error files generated during "
+                            + "simulations? (Y/N):");
+                    input = keyboard.next();
+                }
+                IDFGenerator.keepErr = input.toLowerCase().charAt(0) == 'y'
+                        ? IDFGenerator.KeepFiles.YES
+                        : IDFGenerator.KeepFiles.NO;
+
+                input = "";
+                while(input.equals("") || !(input.toLowerCase().charAt(0) == 'y'
+                        || input.toLowerCase().charAt(0) == 'n'))
+                {
+                    System.out.print("Do you want to keep generated "
+                            + "IDFs? (Y/N):");
+                    input = keyboard.next();
+                }
+                IDFGenerator.keepIdf = input.toLowerCase().charAt(0) == 'y'
+                        ? IDFGenerator.KeepFiles.YES
+                        : IDFGenerator.KeepFiles.NO;
+
+                if(IDFGenerator.keepIdf == IDFGenerator.KeepFiles.YES)
+                {
+                    System.err.println("WARNING!!! Saving IDF files may result"
+                            + " in the use of large amounts of storage space!");
+                }
+
+                IDFGenerator.buildAndRunIDFs(options, base, outputDir,
+                        eplRunDir, weather);
                 break;
             }
         }

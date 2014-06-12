@@ -535,16 +535,13 @@ public class IDFGenerator
 
         ExecutorService exService = Executors.newFixedThreadPool(THREAD_COUNT);
         System.out.printf("Max Thread count: %d\n", THREAD_COUNT);
+        if(area != null)
+            area.append("Max Thread count: " + THREAD_COUNT + "\n");
+
         List<Callable<Object>> tasks = new ArrayList<Callable<Object>>();
-        outWindow.setVisible(true);
-//        // TESTING PURPOSES
-//        for (int i = 0; i < 2; i++)
-//        {
-//            if (area == null)
-//                tasks.add(Executors.callable(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, res.get(i), parametrics, pstyle)));
-//            else
-//                tasks.add(Executors.callable(new IDFLoad_Run(baseIdf, baseOutputPath, batchLoc, weather, res.get(i), parametrics, pstyle, area)));
-//        }
+
+        if(outWindow != null)
+            outWindow.setVisible(true);
 
         System.out.printf("Trying to run %d Simulations!\n", res.size());
         for(String perm : res)
