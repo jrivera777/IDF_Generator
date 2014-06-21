@@ -47,7 +47,7 @@ public class IDFGenerator
     public static ProgramStyle pstyle;
     public static KeepFiles keepErr;
     public static KeepFiles keepIdf;
-    public static int THREAD_COUNT = 4;
+    public static int THREAD_COUNT = 2;
 
     /**
      *
@@ -534,7 +534,6 @@ public class IDFGenerator
 
 
         ExecutorService exService = Executors.newFixedThreadPool(THREAD_COUNT);
-        System.out.printf("Max Thread count: %d\n", THREAD_COUNT);
         if(area != null)
             area.append("Max Thread count: " + THREAD_COUNT + "\n");
 
